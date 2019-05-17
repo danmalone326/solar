@@ -3,8 +3,8 @@
 import database
 import sqlite3
 import json
-import datetime
-import requests
+from datetime import datetime
+import urllib2
 
 def getSite(value):
     dbCursor.execute('''
@@ -44,24 +44,30 @@ def getLastUpdateTime():
     
 def getCurrentData(siteInfo):
     restURL = 'https://monitoringapi.solaredge.com/site/'+siteInfo['id']+'/overview?api_key='+siteInfo['apiKey']
-    restResponse = requests.get(restURL)
-    if restResponse.status_code != 200:
+    try:
+        restResponse = urllib2.urlopen(restURL)
+    except urllib2.HTTPError as e:
         # This means something went wrong.
-        raise Exception('getCurrentData: {}'.format(restResponse.status_code))
+        raise Exception('getCurrentData: {}'.format(e.code))
         
-    overview = restResponse.json();
+    overview = json.loads(restResponse.read().encode("utf-8"))
     
+#     print overview
+
 #     with open('overview.json', 'r') as file:
 #         overview = json.load(file)
 
     queryTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    lastUpdateTime = overview['overview']['lastUpdateTime']
+    lastUpdateTime = overview['overview']['lastUpdateTime'].encode("utf-8")
     currentPower = overview['overview']['currentPower']['power']
     lastDayEnergy = overview['overview']['lastDayData']['energy']
     lastMonthEnergy = overview['overview']['lastMonthData']['energy']
     lastYearEnergy = overview['overview']['lastYearData']['energy']
     lifetimeEnergy = overview['overview']['lifeTimeData']['energy']
-    
+
+#     print (queryTime,lastUpdateTime,currentPower,lastDayEnergy,lastMonthEnergy,lastYearEnergy,lifetimeEnergy)
+#     raise Exception('STOP')
+
     return (queryTime,lastUpdateTime,currentPower,lastDayEnergy,lastMonthEnergy,lastYearEnergy,lifetimeEnergy)
 
 def updateDatabase(data):
@@ -75,7 +81,7 @@ def updateDatabase(data):
 
 
 def getSolarData(siteInfo):
-    currentDT = datetime.datetime.now()
+    currentDT = datetime.now()
     dateStr = currentDT.strftime("%m/%d/%Y")
     print dateStr
     tzStr = currentDT
@@ -89,7 +95,7 @@ siteInfo = getSite("dmalone")
 
 getSolarData(siteInfo)
 maxLastUpdateTime = getLastUpdateTime()
-#currentData = getCurrentData(siteInfo)
+currentData = getCurrentData(siteInfo)
 
 print currentData
 if (currentData[1] > maxLastUpdateTime):
