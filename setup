@@ -1,0 +1,41 @@
+#!/usr/bin/python
+
+import database
+import sqlite3
+
+conn = database.connect()
+
+cursor = conn.cursor()
+
+cursor.execute('''
+CREATE TABLE overview
+             (siteId            text,
+              queryTime         text,
+              lastUpdateTime    text,
+              currentPower      real,
+              lastDayEnergy     real,
+              lastMonthEnergy   real,
+              lastYearEnergy    real,
+              lifetimeEnergy    real
+             )
+''')
+
+cursor.execute('''
+CREATE TABLE sites
+             (id      text,
+              name    text,
+              apiKey  text,
+              lat     text,
+              lon     text
+             )
+''')
+
+cursor.execute('''
+CREATE TABLE astronomical
+             (siteId  text,
+              date    text,
+              json    text
+             )
+''')
+
+conn.commit()

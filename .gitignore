@@ -1,0 +1,11 @@
+# ignore database files
+*.db
+
+# ignore ini (legacy) files
+*.ini
+
+# ignore Python compiled files
+*.pyc
+
+# sample data
+sampleData/
