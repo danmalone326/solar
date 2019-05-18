@@ -6,6 +6,8 @@ import json
 from datetime import datetime
 import urllib2
 
+debug = False
+
 def getSite(value):
     dbCursor.execute('''
     SELECT id,name,apiKey,lat,lon
@@ -83,9 +85,11 @@ def updateDatabase(data):
 def getSolarData(siteInfo):
     currentDT = datetime.now()
     dateStr = currentDT.strftime("%m/%d/%Y")
-    print dateStr
+    if debug:
+        print dateStr
     tzStr = currentDT
-    print tzStr
+    if debug:
+        print tzStr
 
 
 dbConnection = database.connect()
@@ -97,9 +101,12 @@ getSolarData(siteInfo)
 maxLastUpdateTime = getLastUpdateTime()
 currentData = getCurrentData(siteInfo)
 
-print currentData
+if debug:
+    print currentData
+    
 if (currentData[1] > maxLastUpdateTime):
     updateDatabase((siteInfo["id"],)+currentData)
 else:
-    print "no update"
+    if debug:
+        print "no update"
 
