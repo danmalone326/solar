@@ -28,7 +28,39 @@ def getSite(value):
                     "lon": result[4]}
             
     return siteInfo
+
+def dictToRow(overviewDict):
+    overviewRow = (overviewDict['siteId'],
+                   overviewDict['queryTime'],
+                   overviewDict['lastUpdateTime'],
+                   overviewDict['currentPower'],
+                   overviewDict['lastDayEnergy'],
+                   overviewDict['lastMonthEnergy'],
+                   overviewDict['lastYearEnergy'],
+                   overviewDict['lifetimeEnergy'])
+
+    if debug:
+        print overviewRow
     
+    return overviewRow
+
+
+def rowToDict(overviewRow):
+    overviewDict = {}
+    overviewDict["siteId"]=overviewRow[0]
+    overviewDict["queryTime"]=overviewRow[1]
+    overviewDict["lastUpdateTime"]=overviewRow[2]
+    overviewDict["currentPower"]=overviewRow[3]
+    overviewDict["lastDayEnergy"]=overviewRow[4]
+    overviewDict["lastMonthEnergy"]=overviewRow[5]
+    overviewDict["lastYearEnergy"]=overviewRow[6]
+    overviewDict["lifetimeEnergy"]=overviewRow[7]
+
+    if debug:
+        print overviewDict
+    
+    return overviewDict
+
 
 def getLastUpdateTime(siteInfo):
     dbCursor.execute('''
@@ -46,6 +78,26 @@ def getLastUpdateTime(siteInfo):
     
     return time
     
+def getLastData(siteInfo):
+    maxLastUpdateTime = getLastUpdateTime(siteInfo)
+
+    dbCursor.execute('''
+    SELECT *
+      FROM overview
+     WHERE siteId=?
+       AND lastUpdateTime=?
+    ''',(siteInfo['id'],maxLastUpdateTime))
+
+    result = dbCursor.fetchone()
+
+    if (result is None):
+        jsonStr='{}'
+    else:
+        jsonStr=rowToDict(result)
+    
+    return jsonStr
+
+
 def getCurrentData(siteInfo):
     restURL = 'https://monitoringapi.solaredge.com/site/'+siteInfo['id']+'/overview?api_key='+siteInfo['apiKey']
     try:
@@ -72,14 +124,18 @@ def getCurrentData(siteInfo):
 #     print (queryTime,lastUpdateTime,currentPower,lastDayEnergy,lastMonthEnergy,lastYearEnergy,lifetimeEnergy)
 #     raise Exception('STOP')
 
-    return (queryTime,lastUpdateTime,currentPower,lastDayEnergy,lastMonthEnergy,lastYearEnergy,lifetimeEnergy)
+    overviewDict=rowToDict((siteInfo['id'],queryTime,lastUpdateTime,currentPower,lastDayEnergy,lastMonthEnergy,lastYearEnergy,lifetimeEnergy))
 
-def updateDatabase(data):
+    return overviewDict
+
+def updateDatabase(overviewDict):
+    overviewRow=dictToRow(overviewDict)
+
     dbCursor.execute('''
     INSERT INTO overview (siteId,queryTime,lastUpdateTime,currentPower,lastDayEnergy,
                           lastMonthEnergy,lastYearEnergy,lifetimeEnergy)
            VALUES(?,?,?,?,?,?,?,?)
-    ''', data)
+    ''', overviewRow)
 
     dbConnection.commit()
 
@@ -89,15 +145,23 @@ dbCursor = dbConnection.cursor()
 
 siteInfo = getSite("dmalone")
 
-maxLastUpdateTime = getLastUpdateTime(siteInfo)
+# maxLastUpdateTime = getLastUpdateTime(siteInfo)
+lastData = getLastData(siteInfo)
+
 currentData = getCurrentData(siteInfo)
 
 if debug:
+    print "last:"
+    print lastData
+    print "current:"
     print currentData
     
-if (currentData[1] > maxLastUpdateTime):
-    updateDatabase((siteInfo["id"],)+currentData)
+if (currentData['lastUpdateTime'] > lastData['lastUpdateTime']):
+    updateDatabase(currentData)
 else:
     if debug:
         print "no update"
 
+lastData = getLastData(siteInfo)
+with open(siteInfo['name']+'.json', 'w') as output:
+    json.dump(lastData, output)

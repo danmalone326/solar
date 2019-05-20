@@ -9,3 +9,6 @@
 
 # sample data
 sampleData/
+
+# output JSON files
+*.json
