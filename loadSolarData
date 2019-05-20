@@ -30,10 +30,12 @@ def getSite(value):
     return siteInfo
     
 
-def getLastUpdateTime():
+def getLastUpdateTime(siteInfo):
     dbCursor.execute('''
-    SELECT max(lastUpdateTime) FROM overview
-    ''')
+    SELECT max(lastUpdateTime) 
+      FROM overview
+     WHERE siteId=?
+    ''',(siteInfo['id'],))
 
     result = dbCursor.fetchone()
 
@@ -82,23 +84,12 @@ def updateDatabase(data):
     dbConnection.commit()
 
 
-def getSolarData(siteInfo):
-    currentDT = datetime.now()
-    dateStr = currentDT.strftime("%m/%d/%Y")
-    if debug:
-        print dateStr
-    tzStr = currentDT
-    if debug:
-        print tzStr
-
-
 dbConnection = database.connect()
 dbCursor = dbConnection.cursor()
 
 siteInfo = getSite("dmalone")
 
-getSolarData(siteInfo)
-maxLastUpdateTime = getLastUpdateTime()
+maxLastUpdateTime = getLastUpdateTime(siteInfo)
 currentData = getCurrentData(siteInfo)
 
 if debug:
