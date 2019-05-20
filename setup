@@ -31,10 +31,11 @@ CREATE TABLE sites
 ''')
 
 cursor.execute('''
-CREATE TABLE astronomical
+CREATE TABLE sunData
              (siteId  text,
               date    text,
-              json    text
+              sunrise text,
+              sunset  text
              )
 ''')
 
