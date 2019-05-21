@@ -3,7 +3,6 @@
 # updateSiteInfo
 #
 
-import sqlite3
 import database
 import sys
 
@@ -21,63 +20,12 @@ if (len(sys.argv) == 6):
     siteInfo["lat"] = sys.argv[4]
     siteInfo["lon"] = sys.argv[5]
     
-
-def get(value):
-    dbCursor.execute('''
-    SELECT id,name,apiKey,lat,lon
-      FROM sites
-     WHERE id = ?
-        OR name = ?
-    ''',(value,value,))
-
-    result = dbCursor.fetchone()
-    
-    if (result is None):
-        siteInfo = {}
-    else:
-        siteInfo = {"id": result[0], 
-                    "name": result[1], 
-                    "apiKey": result[2], 
-                    "lat": result[3], 
-                    "lon": result[4]}
-            
-    return siteInfo
-    
-
-def insert(siteInfo):
-    dbCursor.execute('''
-    INSERT INTO sites (id,name,apiKey,lat,lon)
-           VALUES(?,?,?,?,?)
-    ''', (siteInfo["id"],siteInfo["name"],siteInfo["apiKey"],siteInfo["lat"],siteInfo["lon"],))
-
-    dbConnection.commit()
-
-def update(siteInfo):
-    dbCursor.execute('''
-    UPDATE sites
-       SET name = ?,
-           apiKey = ?,
-           lat = ?,
-           lon = ?
-     WHERE id = ?
-    ''', (siteInfo["name"],siteInfo["apiKey"],siteInfo["lat"],siteInfo["lon"],siteInfo["id"],))
-
-    dbConnection.commit()
-
-
-
-dbConnection = database.connect()
-dbCursor = dbConnection.cursor()
-
-currentInfo = get(siteInfo["id"])
-
 if (len(sys.argv) == 2):
+    currentInfo = database.getSiteInfo(siteInfo["id"])
     print currentInfo
-elif (currentInfo):
-    update(siteInfo)
-    print "updated."
 else:
-    insert(siteInfo)
-    print "added."
+    database.setSiteInfo(siteInfo)
+    print "added/updated."
+
 
 

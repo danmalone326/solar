@@ -1,102 +1,11 @@
 #!/usr/bin/python
 
 import database
-import sqlite3
 import json
 from datetime import datetime
 import urllib2
 
 debug = False
-
-def getSite(value):
-    dbCursor.execute('''
-    SELECT id,name,apiKey,lat,lon
-      FROM sites
-     WHERE id = ?
-        OR name = ?
-    ''',(value,value,))
-
-    result = dbCursor.fetchone()
-    
-    if (result is None):
-        siteInfo = {}
-    else:
-        siteInfo = {"id": result[0], 
-                    "name": result[1], 
-                    "apiKey": result[2], 
-                    "lat": result[3], 
-                    "lon": result[4]}
-            
-    return siteInfo
-
-def dictToRow(overviewDict):
-    overviewRow = (overviewDict['siteId'],
-                   overviewDict['queryTime'],
-                   overviewDict['lastUpdateTime'],
-                   overviewDict['currentPower'],
-                   overviewDict['lastDayEnergy'],
-                   overviewDict['lastMonthEnergy'],
-                   overviewDict['lastYearEnergy'],
-                   overviewDict['lifetimeEnergy'])
-
-    if debug:
-        print overviewRow
-    
-    return overviewRow
-
-
-def rowToDict(overviewRow):
-    overviewDict = {}
-    overviewDict["siteId"]=overviewRow[0]
-    overviewDict["queryTime"]=overviewRow[1]
-    overviewDict["lastUpdateTime"]=overviewRow[2]
-    overviewDict["currentPower"]=overviewRow[3]
-    overviewDict["lastDayEnergy"]=overviewRow[4]
-    overviewDict["lastMonthEnergy"]=overviewRow[5]
-    overviewDict["lastYearEnergy"]=overviewRow[6]
-    overviewDict["lifetimeEnergy"]=overviewRow[7]
-
-    if debug:
-        print overviewDict
-    
-    return overviewDict
-
-
-def getLastUpdateTime(siteInfo):
-    dbCursor.execute('''
-    SELECT max(lastUpdateTime) 
-      FROM overview
-     WHERE siteId=?
-    ''',(siteInfo['id'],))
-
-    result = dbCursor.fetchone()
-
-    if (result is None):
-        time=0
-    else:
-        time=result[0]
-    
-    return time
-    
-def getLastData(siteInfo):
-    maxLastUpdateTime = getLastUpdateTime(siteInfo)
-
-    dbCursor.execute('''
-    SELECT *
-      FROM overview
-     WHERE siteId=?
-       AND lastUpdateTime=?
-    ''',(siteInfo['id'],maxLastUpdateTime))
-
-    result = dbCursor.fetchone()
-
-    if (result is None):
-        jsonStr='{}'
-    else:
-        jsonStr=rowToDict(result)
-    
-    return jsonStr
-
 
 def getCurrentData(siteInfo):
     restURL = 'https://monitoringapi.solaredge.com/site/'+siteInfo['id']+'/overview?api_key='+siteInfo['apiKey']
@@ -113,40 +22,25 @@ def getCurrentData(siteInfo):
 #     with open('overview.json', 'r') as file:
 #         overview = json.load(file)
 
-    queryTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    lastUpdateTime = overview['overview']['lastUpdateTime'].encode("utf-8")
-    currentPower = overview['overview']['currentPower']['power']
-    lastDayEnergy = overview['overview']['lastDayData']['energy']
-    lastMonthEnergy = overview['overview']['lastMonthData']['energy']
-    lastYearEnergy = overview['overview']['lastYearData']['energy']
-    lifetimeEnergy = overview['overview']['lifeTimeData']['energy']
-
-#     print (queryTime,lastUpdateTime,currentPower,lastDayEnergy,lastMonthEnergy,lastYearEnergy,lifetimeEnergy)
-#     raise Exception('STOP')
-
-    overviewDict=rowToDict((siteInfo['id'],queryTime,lastUpdateTime,currentPower,lastDayEnergy,lastMonthEnergy,lastYearEnergy,lifetimeEnergy))
+    overviewDict={}
+    overviewDict['queryTime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    overviewDict['lastUpdateTime'] = overview['overview']['lastUpdateTime'].encode("utf-8")
+    overviewDict['currentPower'] = overview['overview']['currentPower']['power']
+    overviewDict['lastDayEnergy'] = overview['overview']['lastDayData']['energy']
+    overviewDict['lastMonthEnergy'] = overview['overview']['lastMonthData']['energy']
+    overviewDict['lastYearEnergy'] = overview['overview']['lastYearData']['energy']
+    overviewDict['lifetimeEnergy'] = overview['overview']['lifeTimeData']['energy']
 
     return overviewDict
 
-def updateDatabase(overviewDict):
-    overviewRow=dictToRow(overviewDict)
+#
+# main
+#
 
-    dbCursor.execute('''
-    INSERT INTO overview (siteId,queryTime,lastUpdateTime,currentPower,lastDayEnergy,
-                          lastMonthEnergy,lastYearEnergy,lifetimeEnergy)
-           VALUES(?,?,?,?,?,?,?,?)
-    ''', overviewRow)
-
-    dbConnection.commit()
-
-
-dbConnection = database.connect()
-dbCursor = dbConnection.cursor()
-
-siteInfo = getSite("dmalone")
+siteInfo = database.getSiteInfo("dmalone")
 
 # maxLastUpdateTime = getLastUpdateTime(siteInfo)
-lastData = getLastData(siteInfo)
+lastData = database.getLastOverview(siteInfo)
 
 currentData = getCurrentData(siteInfo)
 
@@ -157,11 +51,12 @@ if debug:
     print currentData
     
 if (currentData['lastUpdateTime'] > lastData['lastUpdateTime']):
-    updateDatabase(currentData)
+    database.insertOverview(siteInfo,currentData)
 else:
     if debug:
         print "no update"
 
-lastData = getLastData(siteInfo)
+restData = database.getLastOverview(siteInfo)
+
 with open(siteInfo['name']+'.json', 'w') as output:
     json.dump(lastData, output)

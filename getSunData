@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import database
-import sqlite3
 import json
 from datetime import datetime, timedelta
 import time
@@ -9,61 +8,8 @@ import urllib,urllib2
 
 debug = False
 
-def getSite(value):
-    dbCursor.execute('''
-    SELECT id,name,apiKey,lat,lon
-      FROM sites
-     WHERE id = ?
-        OR name = ?
-    ''',(value,value,))
-
-    result = dbCursor.fetchone()
-    
-    if (result is None):
-        siteInfo = {}
-    else:
-        siteInfo = {"id": result[0], 
-                    "name": result[1], 
-                    "apiKey": result[2], 
-                    "lat": result[3], 
-                    "lon": result[4]}
-            
-    return siteInfo
-    
-
-def getSavedSunData(siteInfo):
-    dbCursor.execute('''
-    SELECT date,sunrise,sunset
-      FROM sunData
-     WHERE siteId = ?
-    ''',(siteInfo['id'],))
-
-    result = dbCursor.fetchone()
-
-    if (result is None):
-        date=None
-        sunrise=None
-        sunset=None
-    else:
-        date=datetime.strptime(result[0],'%Y-%m-%d').date()
-        sunrise=datetime.strptime(result[1],'%Y-%m-%d %H:%M:%S')
-        sunset=datetime.strptime(result[2],'%Y-%m-%d %H:%M:%S')
-
-    return (date,sunrise,sunset)
-
-def setSavedSunData(siteInfo,date,sunrise,sunset):
-    dbCursor.execute('''
-    DELETE FROM sunData 
-     WHERE siteId=?
-    ''', (siteInfo['id'],))
-
-    dbCursor.execute('''
-    INSERT INTO sunData (siteId,date,sunrise,sunset)
-           VALUES(?,?,?,?)
-    ''', (siteInfo['id'],date.strftime('%Y-%m-%d'),sunrise.strftime('%Y-%m-%d %H:%M:%S'),sunset.strftime('%Y-%m-%d %H:%M:%S'),))
-
-    dbConnection.commit()
-
+milDateFormat="%m/%d/%Y"
+milDateTimeFormat="%m/%d/%Y %H:%M"
 
 def tzOffset():
     timestamp = time.time()
@@ -78,16 +24,15 @@ def tzOffset():
     return offsetStr[:offsetStr.find(":")]
     
 
-def getSunData(siteInfo):
-    currentDT = datetime.now()
-    dateStr = currentDT.strftime("%m/%d/%Y")
+def getSunData(siteInfo,forDt):
+    forDtStr = forDt.strftime(milDateFormat)
     if debug:
-        print dateStr
+        print forDtStr
     tzStr = tzOffset()
     if debug:
         print tzStr
     # https://api.usno.navy.mil/rstt/oneday?date=5/15/2019&coords=35.134686,-120.562267&tz=-07
-    url="https://api.usno.navy.mil/rstt/oneday?date="+dateStr+"&coords="+siteInfo['lat']+','+siteInfo['lon']+"&tz="+tzStr
+    url="https://api.usno.navy.mil/rstt/oneday?date="+forDtStr+"&coords="+siteInfo['lat']+','+siteInfo['lon']+"&tz="+tzStr
     if debug:
         print url
 
@@ -97,32 +42,36 @@ def getSunData(siteInfo):
         # This means something went wrong.
         raise Exception('getSunData: {}'.format(e.code))
 
-    sunData = json.loads(response.read().encode("utf-8"))
+    responseData = json.loads(response.read().encode("utf-8"))
     if debug:
-        print sunData['sundata']
+        print responseData['sundata']
         
-    for dataset in sunData['sundata']:
+    sunDict={}
+    sunDict['date']=forDt
+
+    for dataset in responseData['sundata']:
         if (dataset['phen']=='R'):
-            sunrise=datetime.strptime(dateStr+" "+dataset['time'],"%m/%d/%Y %H:%M")
+            sunDict['sunrise']=datetime.strptime(forDtStr+" "+dataset['time'],milDateTimeFormat)
         elif (dataset['phen']=='S'):
-            sunset=datetime.strptime(dateStr+" "+dataset['time'],"%m/%d/%Y %H:%M")
-    return (currentDT,sunset,sunrise)
+            sunDict['sunset']=datetime.strptime(forDtStr+" "+dataset['time'],milDateTimeFormat)
+    
+    return sunDict
 
 
-currentDT = datetime.now().date()
+today = datetime.now().date()
 if debug:
-    print "Date: "+currentDT.strftime('%Y-%m-%d %H:%M:%S')
+    print "Date: "+today.strftime(milDateTimeFormat)
 
-dbConnection = database.connect()
-dbCursor = dbConnection.cursor()
+# dbConnection = database.connect()
+# dbCursor = dbConnection.cursor()
 
-siteInfo = getSite("dmalone")
-savedSunData = getSavedSunData(siteInfo)
+siteInfo = database.getSiteInfo("dmalone")
+savedSunData = database.getSunData(siteInfo)
 if debug:
-    print "Date: "+savedSunData[0].strftime('%Y-%m-%d %H:%M:%S')
+    print "Date: "+savedSunData['date'].strftime(milDateTimeFormat)
 
 
-if (savedSunData[0]==None or savedSunData[0]!=currentDT):
-    currentSunData=getSunData(siteInfo)
-    setSavedSunData(siteInfo,*currentSunData)
+if (savedSunData['date']==None or savedSunData['date']!=today):
+    todaySunData=getSunData(siteInfo,today)
+    database.setSunData(siteInfo,todaySunData)
 
