@@ -76,13 +76,16 @@ def getSunData(siteInfo):
     result = dbCursor.fetchone()
 
     if (result is None):
-        sunData['date']=None
+        sunData['sundate']=None
         sunData['sunrise']=None
         sunData['sunset']=None
     else:
-        sunData['date']=datetime.strptime(result[0],dateOnlyFormat).date()
-        sunData['sunrise']=datetime.strptime(result[1],datetimeFormat)
-        sunData['sunset']=datetime.strptime(result[2],datetimeFormat)
+        sunData['sundate']=result[0]
+        sunData['sunrise']=result[1]
+        sunData['sunset']=result[2]
+#         sunData['date']=datetime.strptime(result[0],dateOnlyFormat).date()
+#         sunData['sunrise']=datetime.strptime(result[1],datetimeFormat)
+#         sunData['sunset']=datetime.strptime(result[2],datetimeFormat)
 
     return sunData
 
@@ -98,7 +101,7 @@ def setSunData(siteInfo,sunData):
     INSERT INTO sunData (siteId,date,sunrise,sunset)
            VALUES(?,?,?,?)
     ''', (siteInfo['id'],
-          sunData['date'].strftime(dateOnlyFormat),
+          sunData['sundate'].strftime(dateOnlyFormat),
           sunData['sunrise'].strftime(datetimeFormat),
           sunData['sunset'].strftime(datetimeFormat),))
 

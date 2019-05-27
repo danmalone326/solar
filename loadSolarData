@@ -57,6 +57,7 @@ else:
         print "no update"
 
 restData = database.getLastOverview(siteInfo)
+restData.update(database.getSunData(siteInfo))
 
 with open(siteInfo['name']+'.json', 'w') as output:
     json.dump(lastData, output)

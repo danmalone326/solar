@@ -47,7 +47,7 @@ def getSunData(siteInfo,forDt):
         print responseData['sundata']
         
     sunDict={}
-    sunDict['date']=forDt
+    sunDict['sundate']=forDt
 
     for dataset in responseData['sundata']:
         if (dataset['phen']=='R'):
@@ -68,10 +68,10 @@ if debug:
 siteInfo = database.getSiteInfo("dmalone")
 savedSunData = database.getSunData(siteInfo)
 if debug:
-    print "Date: "+savedSunData['date'].strftime(milDateTimeFormat)
+    print "Date: "+savedSunData['sundate'].strftime(milDateTimeFormat)
 
 
-if (savedSunData['date']==None or savedSunData['date']!=today):
+if (savedSunData['sundate']==None or savedSunData['sundate']!=today):
     todaySunData=getSunData(siteInfo,today)
     database.setSunData(siteInfo,todaySunData)
 
