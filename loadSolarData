@@ -2,12 +2,16 @@
 
 import database
 import json
-from datetime import datetime
-import urllib2
+from datetime import datetime, timedelta
+import time
+import urllib,urllib2
 
-debug = False
+debug = True
 
-def getCurrentData(siteInfo):
+milDateFormat="%m/%d/%Y"
+milDateTimeFormat="%m/%d/%Y %H:%M"
+
+def getCurrentOverview(siteInfo):
     restURL = 'https://monitoringapi.solaredge.com/site/'+siteInfo['id']+'/overview?api_key='+siteInfo['apiKey']
     try:
         restResponse = urllib2.urlopen(restURL)
@@ -17,8 +21,6 @@ def getCurrentData(siteInfo):
         
     overview = json.loads(restResponse.read().encode("utf-8"))
     
-#     print overview
-
 #     with open('overview.json', 'r') as file:
 #         overview = json.load(file)
 
@@ -33,31 +35,139 @@ def getCurrentData(siteInfo):
 
     return overviewDict
 
+def updateOverview(siteInfo):
+    updated = False
+    
+    lastOverview = database.getLastOverview(siteInfo)
+    savedSunData = database.getSunData(siteInfo)
+
+    sunriseDT = datetime.strptime(savedSunData['sunrise'],database.datetimeFormat)
+    sunsetDT = datetime.strptime(savedSunData['sunset'],database.datetimeFormat)
+    now = datetime.now()
+    nowMinute = int(now.strftime('%M'))
+
+    if ((nowMinute == 0) or                    # Always once an hour
+        (lastOverview["currentPower"] > 0) or  # If we were generating at the last update
+        ((now > sunriseDT) and (now < sunsetDT))): # Sun is up
+
+        if debug:
+            print "Updating"
+        
+        currentData = getCurrentOverview(siteInfo)
+        updated = True
+
+        if debug:
+            print "current:"
+            print currentData
+    
+        if (currentData['lastUpdateTime'] > lastOverview['lastUpdateTime']):
+            database.insertOverview(siteInfo,currentData)
+        else:
+            if debug:
+                print "no update"
+    
+    return updated
+
+
+def tzOffset():
+    timestamp = time.time()
+    timeNow = datetime.fromtimestamp(timestamp)
+    timeUtc = datetime.utcfromtimestamp(timestamp)
+    
+    if (timeNow<timeUtc):
+        offsetStr="-"+str(timeUtc-timeNow)
+    else:
+        offsetStr="+"+str(timeNow-timeUtc)
+    
+    return offsetStr[:offsetStr.find(":")]
+    
+def getCurrentSunData(siteInfo,forDt):
+    forDtStr = forDt.strftime(milDateFormat)
+    if debug:
+        print forDtStr
+    tzStr = tzOffset()
+    if debug:
+        print tzStr
+    # https://api.usno.navy.mil/rstt/oneday?date=5/15/2019&coords=35.134686,-120.562267&tz=-07
+    url="https://api.usno.navy.mil/rstt/oneday?date="+forDtStr+"&coords="+siteInfo['lat']+','+siteInfo['lon']+"&tz="+tzStr
+    if debug:
+        print url
+
+    try:
+        response=urllib2.urlopen(url)
+        responseData = json.loads(response.read().encode("utf-8"))
+        if debug:
+            print responseData['sundata']
+        
+        sunDict={}
+        sunDict['sundate']=forDt
+
+        for dataset in responseData['sundata']:
+            if (dataset['phen']=='R'):
+                sunDict['sunrise']=datetime.strptime(forDtStr+" "+dataset['time'],milDateTimeFormat)
+            elif (dataset['phen']=='S'):
+                sunDict['sunset']=datetime.strptime(forDtStr+" "+dataset['time'],milDateTimeFormat)
+    
+    except urllib2.HTTPError as e:
+        # This means something went wrong.
+        print "Unable to get sun data."
+        print 'getSunData: {}'.format(e.code)
+        sunDict=None
+
+    return sunDict
+
+def updateSunData(siteInfo):
+    updated = False
+    
+    nowDT = datetime.now().date()
+    nowDate=nowDT.strftime(database.dateOnlyFormat)
+    nowHour=int(datetime.now().strftime('%H'))
+    if debug:
+        print nowDT
+        print nowDate
+        print nowHour
+
+    savedSunData=database.getSunData(siteInfo)
+    
+    if (nowDate == savedSunData['sundate']):
+        if debug:
+            print "Sun data is current"
+    elif (nowHour >= 3):
+        # Update sun data after 3am to account for daylight savings
+        if debug:
+            print "Time to update sun data"
+        todaySunData=getCurrentSunData(siteInfo,nowDT)
+        if todaySunData:
+            database.setSunData(siteInfo,todaySunData)
+            updated = True
+        
+    else:
+        if debug:
+            print "Too early to update"
+
+    return updated
+
+def outputJSON(siteInfo):
+    restData = database.getLastOverview(siteInfo)
+    restData.update(database.getSunData(siteInfo))
+
+    with open(siteInfo['name']+'.json', 'w') as output:
+        json.dump(restData, output)
+
+
 #
 # main
 #
 
 siteInfo = database.getSiteInfo("dmalone")
 
-# maxLastUpdateTime = getLastUpdateTime(siteInfo)
-lastData = database.getLastOverview(siteInfo)
+updated = False
 
-currentData = getCurrentData(siteInfo)
+if updateSunData(siteInfo):
+    updated = True
 
-if debug:
-    print "last:"
-    print lastData
-    print "current:"
-    print currentData
-    
-if (currentData['lastUpdateTime'] > lastData['lastUpdateTime']):
-    database.insertOverview(siteInfo,currentData)
-else:
-    if debug:
-        print "no update"
+if updateOverview(siteInfo):
+    updated = True
 
-restData = database.getLastOverview(siteInfo)
-restData.update(database.getSunData(siteInfo))
-
-with open(siteInfo['name']+'.json', 'w') as output:
-    json.dump(lastData, output)
+if updated:
+    outputJSON(siteInfo)

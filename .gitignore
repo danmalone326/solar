@@ -12,3 +12,6 @@ sampleData/
 
 # output JSON files
 *.json
+
+# test script
+test
