@@ -26,8 +26,7 @@
     <script src="meter-svg.js"></script>
 </head>
 
-
-<body>
+<body onload="onload();"  onresize="resize();">
 
 <div id="analogMeter" class="dashboard" >
 </div>
@@ -88,13 +87,6 @@
 </div>
 
 <script>
-window.onload = function() {
-  onload();
-};
-
-window.resize = function() {
-  resize();
-};
 
 // var metricDataURL="passwordMetrics.DEV.json";
 // var metricDataURL="data:///Users/dmalone/code/meter-svg/passwordMetrics.DEV.json";
@@ -157,10 +149,10 @@ function bottomButtonSelect(id){
         buttonElement=document.getElementById(buttonID[count]);
         divElement=document.getElementById(divID[count]);
         if (id == buttonID[count]){
-            buttonElement.style.borderTopStyle='none';
+            buttonElement.style.borderTopColor='black';
             divElement.style.display='';
         } else{
-            buttonElement.style.borderTopStyle='solid';
+            buttonElement.style.borderTopColor='';
             divElement.style.display='none';    
         }        
     }
@@ -666,6 +658,7 @@ function resize() {
 }
 
 function onload(){
+    console.log("onload");
     setupLayout(); 
     refresh();
     bottomButtonSelect(document.getElementById('bottomDigitalButton').id);
