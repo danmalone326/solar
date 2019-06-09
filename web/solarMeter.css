@@ -152,6 +152,16 @@ body{
 	z-index:100;
 }
 
+.selector {
+    font-family: 'Share Tech Mono', monospace;
+    color: #aaa;
+}
+
+.selectorButton {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+}
 
 /* Menus */
 .bottomMenuContainer {

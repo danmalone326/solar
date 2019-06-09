@@ -53,6 +53,13 @@ var dashboardInfo={};
 var buttonID = ["bottomAnalogButton","bottomDigitalButton","bottomTextButton","bottomJsonButton"];
 var divID = ["analogMeter","digitalMeter","textDiv","jsonDiv"];
 
+var selectorSelected = 0;
+var selectorText = ["Now","Today","This Month","This Year"];
+var selectorValues = ["currentPower","lastDayEnergy","lastMonthEnergy","lastYearEnergy"];
+var selectorPrecision = [3,3,3,3];
+var selectorUnits = ["kW","kWh","kWh","kWh"];
+
+
 function bottomButtonSelect(id){
     var count, buttonElement, divElement;
     
@@ -67,6 +74,15 @@ function bottomButtonSelect(id){
             divElement.style.display='none';    
         }        
     }
+    setupLayout(); 
+    loadMetricData();
+}
+
+function selectorButtonSelect(index){
+    var count, buttonElement, divElement;
+    
+    selectorSelected = index;
+    
     setupLayout(); 
     loadMetricData();
 }
@@ -260,6 +276,9 @@ function setupLayout() {
     divElement.innerHTML=backString;
     var unitHeight=(divElement.clientHeight + 1);
     unitElement.style.top=valueHeight-unitHeight;
+    
+    var divElement=document.getElementById('digitalUnitFront');
+    dashboardInfo["digitalUnitFront"]=divElement;
 
     var infoLabelLeft=displayInnerBorder;
     var infoValueLeft=infoLabelLeft+(mainDigitalRowWidth*1/5);
@@ -304,7 +323,50 @@ function setupLayout() {
     var displayPartHeight=infoRowTop+labelElement.clientHeight+displayInnerBorder;
     var divElement=document.getElementById('digitalDisplay');
     divElement.style.height=displayPartHeight;
+    
+//  Selector
+    var selectorWidth=areaWidth;
+    var selectorHeight=selectorWidth;
+    var selectorTop=areaHeight - menuHeight - selectorHeight;
+    var selectorLeft=0;
+    
+    var buttonWidth=selectorWidth/2;
+    var buttonHeight=selectorHeight/2;
+    
+    var selectorElement=document.getElementById('selector');
+    setPosition(selectorElement,selectorLeft,selectorTop,selectorWidth,selectorHeight);
 
+    var selectorElement=document.getElementById('selectorCurrent');
+    setPosition(selectorElement,0,0,'','');
+    var selectorElement=document.getElementById('selectorCurrentInner');
+    selectorElement.innerHTML=selectorText[0];
+    selectorElement.style.position='absolute';
+    selectorElement.style.left='0';
+    selectorElement.style.top='0';
+
+    var selectorElement=document.getElementById('selectorToday');
+    setPosition(selectorElement,buttonWidth,0,'','');
+    var selectorElement=document.getElementById('selectorTodayInner');
+    selectorElement.innerHTML=selectorText[1];
+    selectorElement.style.position='absolute';
+    selectorElement.style.right='0';
+    selectorElement.style.top='0';
+
+    var selectorElement=document.getElementById('selectorMonth');
+    setPosition(selectorElement,0,buttonHeight,'','');
+    var selectorElement=document.getElementById('selectorMonthInner');
+    selectorElement.innerHTML=selectorText[2];
+    selectorElement.style.position='absolute';
+    selectorElement.style.left='0';
+    selectorElement.style.bottom='0';
+
+    var selectorElement=document.getElementById('selectorYear');
+    setPosition(selectorElement,buttonWidth,buttonHeight,'','');
+    var selectorElement=document.getElementById('selectorYearInner');
+    selectorElement.innerHTML=selectorText[3];
+    selectorElement.style.position='absolute';
+    selectorElement.style.right='0';
+    selectorElement.style.bottom='0';
 
 // Analog Meter
     var digitalMeterElement=document.getElementById('analogMeter');
@@ -439,6 +501,7 @@ function format7Segment(number,precision,totalDigits) {
         numCharacters++;
     }
     tempString=tempString.padStart(numCharacters,'!');
+    tempString=tempString.substring(0,numCharacters);
     return tempString;
 }
 
@@ -478,7 +541,8 @@ function metricsUpdated(lastModified) {
     dashboardInfo["textTodayValue"].innerHTML=(Math.round(metricData["lastDayEnergy"])/1000).toFixed(3)+" kWh";
     dashboardInfo["textMonthValue"].innerHTML=(Math.round(metricData["lastMonthEnergy"])/1000).toFixed(3)+" kWh";
     
-    dashboardInfo["digitalValueFront"].innerHTML=format7Segment(metricData["currentPower"]/1000,3,digitalDisplayDigits);
+    dashboardInfo["digitalValueFront"].innerHTML=format7Segment(metricData[selectorValues[selectorSelected]]/1000,selectorPrecision[selectorSelected],digitalDisplayDigits);
+    dashboardInfo["digitalUnitFront"].innerHTML=selectorUnits[selectorSelected];
 
     var updated=metricData["lastUpdateTime"];
     var sunrise=metricData["sunrise"];
