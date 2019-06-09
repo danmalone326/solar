@@ -6,52 +6,12 @@ var metricData;
 
 var digitalDisplayDigits=6;
 
-
 var dashboardInfo={};
 
 
-// function addSvgAndText(outerInfo,newIDPrefix){
-//     outerInfo[newIDPrefix]={}
-//     
-//     var newSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-//     newSvg.id = outerInfo.id+":"+newIDPrefix+":svg";
-//     newSvg.classList.add('gauge');
-//     outerInfo.element.appendChild(newSvg);
-//     
-//     outerInfo[newIDPrefix].svg={};
-//     outerInfo[newIDPrefix].svg.id=newSvg.id;
-//     outerInfo[newIDPrefix].svg.element=newSvg;
-// 
-//     var textDiv = document.createElement('div');
-//     textDiv.id = outerInfo.id+":"+newIDPrefix+":text";
-//     textDiv.classList.add('gaugeText');
-//     outerInfo.element.appendChild(textDiv);
-// 
-//     outerInfo[newIDPrefix].text={};
-//     outerInfo[newIDPrefix].text.id=textDiv.id;
-//     outerInfo[newIDPrefix].text.element=textDiv;
-// 
-//     var countDiv = document.createElement('div');
-//     countDiv.id = outerInfo.id+":"+newIDPrefix+":countText";
-//     countDiv.classList.add('gaugeCount');
-//     textDiv.appendChild(countDiv);
-// 
-//     outerInfo[newIDPrefix].countText={};
-//     outerInfo[newIDPrefix].countText.id=countDiv.id;
-//     outerInfo[newIDPrefix].countText.element=countDiv;
-// 
-//     var labelDiv = document.createElement('div');
-//     labelDiv.id = outerInfo.id+":"+newIDPrefix+":labelText";
-//     labelDiv.classList.add('gaugeLabel');
-//     textDiv.appendChild(labelDiv);
-// 
-//     outerInfo[newIDPrefix].labelText={};
-//     outerInfo[newIDPrefix].labelText.id=labelDiv.id;
-//     outerInfo[newIDPrefix].labelText.element=labelDiv;
-// }
-
 var buttonID = ["bottomAnalogButton","bottomDigitalButton","bottomTextButton","bottomJsonButton"];
 var divID = ["analogMeter","digitalMeter","textDiv","jsonDiv"];
+var selectedButtonNum = 0;
 
 var selectorSelected = 0;
 var selectorText = ["Now","Today","This<br/>Month","This<br/>Year"];
@@ -60,14 +20,26 @@ var selectorPrecision = [3,3,3,3];
 var selectorUnits = ["kW","kWh","kWh","kWh"];
 var selectorDirection = [315,45,225,135];
 
+var selectorMax = [10,100,1000,10000];
 
-function bottomButtonSelect(id){
+function setAllDisplay(value){
+    for (count=0; count<buttonID.length; count++){
+        divElement=document.getElementById(divID[count]);
+        divElement.style.display=value;    
+    }
+
+    divElement=document.getElementById('selector');
+    divElement.style.display=value;    
+}
+
+function bottomButtonSelect(buttonNum){
     var count, buttonElement, divElement;
     
     for (count=0; count<buttonID.length; count++){
         buttonElement=document.getElementById(buttonID[count]);
         divElement=document.getElementById(divID[count]);
-        if (id == buttonID[count]){
+        if (count == buttonNum){
+            selectedButtonNum=count;
             buttonElement.style.borderTopColor='black';
             divElement.style.display='';
         } else{
@@ -75,7 +47,14 @@ function bottomButtonSelect(id){
             divElement.style.display='none';    
         }        
     }
-    setupLayout(); 
+
+    divElement=document.getElementById('selector');
+    if (selectedButtonNum<2) {
+        divElement.style.display='';
+    } else {
+        divElement.style.display='none';
+    }
+//     setupLayout(); 
     loadMetricData();
     selectorButtonSelect(selectorSelected);
 }
@@ -143,10 +122,14 @@ function setPosition(element,left,top,width,height){
 }
 
 function setupLayout() {
+    console.log('setupLayout');
+
+    setAllDisplay('');
+    
     var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
     var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-    // console.log(w);
-    // console.log(h);
+//     console.log(w);
+//     console.log(h);
 
     var areaWidth = w;
     var areaHeight = h;
@@ -162,16 +145,20 @@ function setupLayout() {
     var areaLeft = Math.floor((w - areaWidth)/2);
     var areaTop = Math.floor((h - areaHeight)/2);
 
-    // console.log(dashboardW);
-    // console.log(dashboardH);
+//     console.log(areaWidth);
+//     console.log(areaHeight);
 
     var areaCenter=Math.floor(areaWidth/2);
     var menuHeight=areaHeight/16;
 
     // JSON Version
-    var jsonElement=document.getElementById('jsonDiv');
+    var jsonElement=document.getElementById('mainContainer');
     setPosition(jsonElement,areaLeft,areaTop,areaWidth,areaHeight-menuHeight);
+
+    // JSON Version
+    var jsonElement=document.getElementById('jsonDiv');
     jsonElement.innerHTML="";
+
     var jsonTextElement=document.createElement('pre');
     jsonTextElement.classList.add('jsonText');
     dashboardInfo["jsonTextElement"]=jsonTextElement;
@@ -179,7 +166,6 @@ function setupLayout() {
 
     // Text Only
     var textElement=document.getElementById('textDiv');
-    setPosition(textElement,areaLeft,areaTop,areaWidth,areaHeight-menuHeight);
     textElement.innerHTML="";
     
     var textPartHeight=areaHeight/4;
@@ -240,9 +226,7 @@ function setupLayout() {
     var displayPartHeight=areaHeight/4;
     var displayPartWidth=areaWidth;  // related to border that is set in css file
     
-//     var displayDigits=8;
     var digitalMeterElement=document.getElementById('digitalMeter');
-    setPosition(digitalMeterElement,areaLeft,areaTop,areaWidth,areaHeight-menuHeight);
     
     var divElement=document.getElementById('digitalDisplay');
     divElement.style.width=displayPartWidth;
@@ -265,7 +249,6 @@ function setupLayout() {
     var unitLeft=displayInnerBorder+digitWidth*digitalDisplayDigits;
         
     var divElement=document.getElementById('digitalValue');
-//     setPosition(divElement,displayInnerBorder,displayInnerBorder,'auto','auto');
 
     var backString="8.".repeat(digitalDisplayDigits);
     var valueFontSize=calculateCharacterWidth(backString,divElement,valueWidth,200);
@@ -341,10 +324,10 @@ function setupLayout() {
     divElement.style.height=displayPartHeight;
     
 //  Selector
-    var selectorWidth=areaWidth - menuHeight;
+    var selectorWidth=areaWidth - menuHeight*2;
     var selectorHeight=selectorWidth;
     var selectorTop=areaHeight - menuHeight - (menuHeight/2) - selectorHeight;
-    var selectorLeft=menuHeight/2;
+    var selectorLeft=menuHeight;
     var selectorRadius=(selectorWidth/2)*0.90;
     var selectorColor="#777";
     
@@ -430,14 +413,38 @@ function setupLayout() {
 
 
 // Analog Meter
-    var digitalMeterElement=document.getElementById('analogMeter');
-    setPosition(digitalMeterElement,areaLeft,areaTop,areaWidth,areaHeight-menuHeight);
+    var analogMeterElement=document.getElementById('analogMeter');
+
+    var gaugeWidth=areaWidth;
+    var gaugeHeight=selectorTop - menuHeight;
+    var gaugeTop=0
+    var gaugeLeft=0;
+    
+    var analogMeterElement=document.getElementById('analogMeterContainer');
+    setPosition(analogMeterElement,gaugeLeft,gaugeTop,gaugeWidth,gaugeHeight);
+
+    var labelFontSize=calculateCharacterWidth("10",analogMeterElement,gaugeWidth/20,200);
+    analogMeterElement.style.fontSize=labelFontSize;
+
+    var gauge1 = new Gauge('analogMeterSvg',105,0);
+    gauge1.addTicks(0.95,21,0.025,'analogMeterTicks',"top");
+    gauge1.addTicks(0.95,11,0.05,'analogMeterTicks',"top");
+    gauge1.addArc(0.95,'analogMeterArc');
+    gauge1.addNumberLabels(0.85,0,10,11,'analogMeterLabel');
+
+    needle = gauge1.addNeedle(1,0,'analogMeterNeedle');
+    dashboardInfo["analogMeterNeedle"]=needle;
+
+    gauge1.draw();
+
+    dashboardInfo["analogMeterSvg"]=gauge1;
+    
 
 
 
 // Bottom Menu
     var divElement=document.getElementById('bottomMenu');
-    setPosition(divElement,areaLeft,areaTop+areaHeight-menuHeight,areaWidth,menuHeight);
+    setPosition(divElement,0,areaHeight-menuHeight,areaWidth,menuHeight);
     divElement.style['line-height']=menuHeight+'px';
 
 // 4 Buttons
@@ -462,97 +469,9 @@ function setupLayout() {
     setPosition(divElement,3*buttonWidth,0,buttonWidth,menuHeight);
     divElement.style.fontSize=buttonFontSize;
     
-
-
-
-// <div class="center">
-// 	<div class="Clock-Wrapper">
-// 		<span class="Clock-Time-Background D7MBI">88:88<span style="font-size:30px;">88</span></span>
-// 		<span id="DSEGClock" class="Clock-Time-Front D7MBI"></span>
-// 		<span class="Clock-Year-Background"><span class="D7MI">2088-88-88</span><span class="D14MI"> ~~~</span></span>
-// 		<span id="DSEGClock-Year" class="Clock-Year-Front"></span>
-// 	</div>
-// </div>
-
-
-
-//     var dlElement=document.createElement('dl');
-//     dlElement.classList.add('textList');
-//     
-//     var dtElement=document.createElement('dt');
-//     dtElement.classList.add('textTerm');
-//     dtElement.innerHTML="Now"
-//     dlElement.appendChild(dtElement);
-//     
-//     var ddElement=document.createElement('dd');
-//     ddElement.classList.add('textDescription');
-//     ddElement.id="textNowValue"
-//     dashboardInfo["textNowValue"]=ddElement;
-//     dlElement.appendChild(ddElement);
-// 
-//     var dtElement=document.createElement('dt');
-//     dtElement.classList.add('textTerm');
-//     dtElement.innerHTML="Today"
-//     dlElement.appendChild(dtElement);
-//     
-//     var ddElement=document.createElement('dd');
-//     ddElement.classList.add('textDescription');
-//     ddElement.id="textTodayValue"
-//     dashboardInfo["textTodayValue"]=ddElement;
-//     dlElement.appendChild(ddElement);
-// 
-//     var dtElement=document.createElement('dt');
-//     dtElement.classList.add('textTerm');
-//     dtElement.innerHTML="This Month"
-//     dlElement.appendChild(dtElement);
-//     
-//     var ddElement=document.createElement('dd');
-//     ddElement.classList.add('textDescription');
-//     ddElement.id="textMonthValue"
-//     dashboardInfo["textMonthValue"]=ddElement;
-//     dlElement.appendChild(ddElement);
-// 
-//     textElement.appendChild(dlElement);
-
-//     
-    
-//     var meterLeft=areaLeft;
-//     var meterTop=areaTop;
-//     var meterWidth=areaWidth;
-//     var meterHeight=areaWidth;
-// 
-//     var buttonsLeft=areaLeft;
-//     var buttonsTop=meterTop+meterHeight;
-//     var buttonsWidth=areaWidth;
-//     var buttonsHeight=areaHeight-meterHeight;
-//     
-//     var meterInfo={};
-// 
-//     var outerElement=document.getElementById('outer');
-//     outerElement.innerHTML="";
-//     setPosition(outerElement,areaLeft,areaTop,areaWidth,areaHeight);
-//     meterInfo['outerDiv']=outerElement;
-//     
-//     var gaugeDiv=document.createElement('div');
-//     gaugeDiv.id=1;
-// 
-//     var gaugeTextColor="white";
-
+    setAllDisplay('none');
+//     bottomButtonSelect(selectedButtonNum);
 }
-
-// function draw() {
-//     var category;
-//     var timeframe;
-//     for (var c=0; c<categories.length; c++){
-//         category=categories[c];
-//         for (var t=0; t<timeframes.length; t++) {
-//             timeframe=timeframes[t];
-//             if (dashboardInfo[category][timeframe].gauge){
-//                 dashboardInfo[category][timeframe].gauge.draw();
-//             }
-//         }
-//     }
-// }
 
 
 function format7Segment(number,precision,totalDigits) {
@@ -636,7 +555,10 @@ function metricsUpdated(lastModified) {
         dashboardInfo["info3ValueFront"].innerHTML=format7SegmentHHMI(updated);
     } 
 
-    
+    var needlePercent=metricData[selectorValues[selectorSelected]]/(1000*selectorMax[selectorSelected]);
+    dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedle"],needlePercent);
+    console.log(needlePercent);
+
 //         Set needles and text values
 //     for (var t=0; t<timeframes.length; t++) {
 //         timeframe=timeframes[t];
@@ -689,6 +611,7 @@ function resize() {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(function(){
         setupLayout();
+        bottomButtonSelect(selectedButtonNum);
         refresh();
         selectorButtonSelect(selectorSelected);
     },250);
@@ -697,7 +620,7 @@ function resize() {
 function onload(){
 //     console.log("onload");
     setupLayout(); 
+    bottomButtonSelect(selectedButtonNum);
     refresh();
-    bottomButtonSelect(document.getElementById('bottomDigitalButton').id);
     selectorButtonSelect(selectorSelected);
 }

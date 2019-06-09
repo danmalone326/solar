@@ -28,52 +28,56 @@
     </head>
 
     <body onload="onload();"  onresize="resize();">
+        <div id="mainContainer">
+            <div id="analogMeter" class="dashboard" >
+            <div id="analogMeterContainer" class="analogMeterContainer">
+            <svg id="analogMeterSvg" class="analogMeterSvg"></svg>
+            </div>
+            </div>
 
-        <div id="analogMeter" class="dashboard" >
-        </div>
+            <div id="digitalMeter" class="dashboard">
+                <div id="digitalDisplay" class="digitalDisplay">
+                    <div id="mainDigitalRow">
+                        <div id="digitalValue" class="lcdOuter sevenSegmentFont">
+                            <div id="digitalValueBack" class="lcdBack"></div>
+                            <div id="digitalValueFront" class="lcdFront"></div>
+                        </div>
+                        <div id="digitalUnit" class="lcdOuter techFont">
+                            <div id="digitalUnitBack" class="lcdBack"></div>
+                            <div id="digitalUnitFront" class="lcdFront">kW</div>
+                        </div>
+                    </div>
+                    <div id="info1Row">
+                        <div id="info1Label" class="lcdOuter techFont">
+            <!--                 <div id="info1LabelBack" class="lcdBack">SUNRISE</div> -->
+                            <div id="info1LabelFront" class="lcdFront">S</div>
+                        </div>
+                        <div id="info1Value" class="lcdOuter sevenSegmentFont">
+                            <div id="info1ValueBack" class="lcdBack">8.8.:8.8. 8.</div>
+                            <div id="info1ValueFront" class="lcdFront">!</div>
+                        </div>
+                    </div>
+                    <div id="info2Row">
+                        <div id="info2Label" class="lcdOuter techFont">
+                            <div id="info2LabelFront" class="lcdFront">S</div>
+                        </div>
+                        <div id="info2Value" class="lcdOuter sevenSegmentFont">
+                            <div id="info1ValueBack" class="lcdBack">8.8.:8.8. 8.</div>
+                            <div id="info2ValueFront" class="lcdFront">!</div>
+                        </div>
+                    </div>
+                    <div id="info3Row">
+                        <div id="info3Label" class="lcdOuter techFont">
+                            <div id="info3LabelFront" class="lcdFront">S</div>
+                        </div>
+                        <div id="info3Value" class="lcdOuter sevenSegmentFont">
+                            <div id="info1ValueBack" class="lcdBack">8.8.:8.8. 8.</div>
+                            <div id="info3ValueFront" class="lcdFront">!</div>
+                        </div>
+                    </div>
+                </div>  <!-- Display -->
+            </div>
 
-        <div id="digitalMeter" class="dashboard">
-            <div id="digitalDisplay" class="digitalDisplay">
-                <div id="mainDigitalRow">
-                    <div id="digitalValue" class="lcdOuter sevenSegmentFont">
-                        <div id="digitalValueBack" class="lcdBack"></div>
-                        <div id="digitalValueFront" class="lcdFront"></div>
-                    </div>
-                    <div id="digitalUnit" class="lcdOuter techFont">
-                        <div id="digitalUnitBack" class="lcdBack"></div>
-                        <div id="digitalUnitFront" class="lcdFront">kW</div>
-                    </div>
-                </div>
-                <div id="info1Row">
-                    <div id="info1Label" class="lcdOuter techFont">
-        <!--                 <div id="info1LabelBack" class="lcdBack">SUNRISE</div> -->
-                        <div id="info1LabelFront" class="lcdFront">S</div>
-                    </div>
-                    <div id="info1Value" class="lcdOuter sevenSegmentFont">
-                        <div id="info1ValueBack" class="lcdBack">8.8.:8.8. 8.</div>
-                        <div id="info1ValueFront" class="lcdFront">!</div>
-                    </div>
-                </div>
-                <div id="info2Row">
-                    <div id="info2Label" class="lcdOuter techFont">
-                        <div id="info2LabelFront" class="lcdFront">S</div>
-                    </div>
-                    <div id="info2Value" class="lcdOuter sevenSegmentFont">
-                        <div id="info1ValueBack" class="lcdBack">8.8.:8.8. 8.</div>
-                        <div id="info2ValueFront" class="lcdFront">!</div>
-                    </div>
-                </div>
-                <div id="info3Row">
-                    <div id="info3Label" class="lcdOuter techFont">
-                        <div id="info3LabelFront" class="lcdFront">S</div>
-                    </div>
-                    <div id="info3Value" class="lcdOuter sevenSegmentFont">
-                        <div id="info1ValueBack" class="lcdBack">8.8.:8.8. 8.</div>
-                        <div id="info3ValueFront" class="lcdFront">!</div>
-                    </div>
-                </div>
-            </div>  <!-- Display -->
-            
             <!-- Selector -->
             <div id="selector" class="selector">
                 <div id="selectorCurrent" class="selectorButton" onclick="selectorButtonSelect(0);">
@@ -90,19 +94,19 @@
                 </div>
                 <div id=selectorDial></div>
             </div>
-        </div>
 
-        <div id="textDiv" class="dashboard">
-        </div>
+            <div id="textDiv" class="dashboard">
+            </div>
         
-        <div id="jsonDiv" class="dashboard">
-        </div>
+            <div id="jsonDiv" class="dashboard">
+            </div>
 
-        <div id="bottomMenu" class="bottomMenuContainer">
-            <div id="bottomAnalogButton" class="bottomMenu" onclick="bottomButtonSelect(this.id);">Analog</div>
-            <div id="bottomDigitalButton" class="bottomMenu" onclick="bottomButtonSelect(this.id);">Digital</div>
-            <div id="bottomTextButton" class="bottomMenu" onclick="bottomButtonSelect(this.id);">Text</div>
-            <div id="bottomJsonButton" class="bottomMenu" onclick="bottomButtonSelect(this.id);">JSON</div>
+            <div id="bottomMenu" class="bottomMenuContainer">
+                <div id="bottomAnalogButton" class="bottomMenu" onclick="bottomButtonSelect(0);">Analog</div>
+                <div id="bottomDigitalButton" class="bottomMenu" onclick="bottomButtonSelect(1);">Digital</div>
+                <div id="bottomTextButton" class="bottomMenu" onclick="bottomButtonSelect(2);">Text</div>
+                <div id="bottomJsonButton" class="bottomMenu" onclick="bottomButtonSelect(3);">JSON</div>
+            </div>
         </div>
 
     </body>
