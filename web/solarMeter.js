@@ -54,10 +54,11 @@ var buttonID = ["bottomAnalogButton","bottomDigitalButton","bottomTextButton","b
 var divID = ["analogMeter","digitalMeter","textDiv","jsonDiv"];
 
 var selectorSelected = 0;
-var selectorText = ["Now","Today","This Month","This Year"];
+var selectorText = ["Now","Today","This<br/>Month","This<br/>Year"];
 var selectorValues = ["currentPower","lastDayEnergy","lastMonthEnergy","lastYearEnergy"];
 var selectorPrecision = [3,3,3,3];
 var selectorUnits = ["kW","kWh","kWh","kWh"];
+var selectorDirection = [315,45,225,135];
 
 
 function bottomButtonSelect(id){
@@ -76,6 +77,20 @@ function bottomButtonSelect(id){
     }
     setupLayout(); 
     loadMetricData();
+    selectorButtonSelect(selectorSelected);
+}
+
+var dialCenterX=0;
+var dialCenterY=0;
+var dialElement;
+function setDialCenter(centerX,centerY,element){
+    dialCenterX=centerX;
+    dialCenterY=centerY;
+    dialElement=element;
+}
+
+function rotateDial(degrees){
+    dialElement.setAttribute("transform", "rotate("+degrees+" "+dialCenterX+" "+dialCenterY+")");
 }
 
 function selectorButtonSelect(index){
@@ -83,7 +98,8 @@ function selectorButtonSelect(index){
     
     selectorSelected = index;
     
-    setupLayout(); 
+//     setupLayout(); 
+    rotateDial(selectorDirection[selectorSelected]);
     loadMetricData();
 }
 
@@ -325,16 +341,22 @@ function setupLayout() {
     divElement.style.height=displayPartHeight;
     
 //  Selector
-    var selectorWidth=areaWidth;
+    var selectorWidth=areaWidth - menuHeight;
     var selectorHeight=selectorWidth;
-    var selectorTop=areaHeight - menuHeight - selectorHeight;
-    var selectorLeft=0;
+    var selectorTop=areaHeight - menuHeight - (menuHeight/2) - selectorHeight;
+    var selectorLeft=menuHeight/2;
+    var selectorRadius=(selectorWidth/2)*0.90;
+    var selectorColor="#777";
     
     var buttonWidth=selectorWidth/2;
     var buttonHeight=selectorHeight/2;
     
-    var selectorElement=document.getElementById('selector');
-    setPosition(selectorElement,selectorLeft,selectorTop,selectorWidth,selectorHeight);
+    var selectorTopElement=document.getElementById('selector');
+    setPosition(selectorTopElement,selectorLeft,selectorTop,selectorWidth,selectorHeight);
+
+    var selectorFontSize=calculateCharacterWidth(selectorText[3],selectorTopElement,buttonWidth/3,400);
+    selectorTopElement.style.fontSize=selectorFontSize;
+
 
     var selectorElement=document.getElementById('selectorCurrent');
     setPosition(selectorElement,0,0,'','');
@@ -367,6 +389,45 @@ function setupLayout() {
     selectorElement.style.position='absolute';
     selectorElement.style.right='0';
     selectorElement.style.bottom='0';
+    
+    var dialElement=document.getElementById('selectorDial');
+    dialElement.innerHTML="";
+    
+    var svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    // set width and height
+    svgElement.setAttribute("width", "100%");
+    svgElement.setAttribute("height", "100%");
+    
+    var circleElement=document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circleElement.setAttribute("cx", buttonWidth);
+    circleElement.setAttribute("cy", buttonHeight);
+    circleElement.setAttribute("r", selectorRadius);
+    circleElement.setAttribute("stroke", selectorColor);
+    svgElement.appendChild(circleElement);
+    
+    var groupElement=document.createElementNS("http://www.w3.org/2000/svg", "g");
+    setDialCenter(buttonWidth,buttonHeight,groupElement);
+
+    var ellipseElement=document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+    ellipseElement.setAttribute("cx", buttonWidth);
+    ellipseElement.setAttribute("cy", buttonHeight);
+    ellipseElement.setAttribute("rx", selectorRadius*0.10);
+    ellipseElement.setAttribute("ry", selectorRadius*0.90);
+    ellipseElement.setAttribute("stroke", selectorColor);
+    groupElement.appendChild(ellipseElement);
+
+    var ellipseElement=document.createElementNS("http://www.w3.org/2000/svg", "line");
+    ellipseElement.setAttribute("x1", buttonWidth);
+    ellipseElement.setAttribute("y1", selectorRadius*0.25);
+    ellipseElement.setAttribute("x2", buttonWidth);
+    ellipseElement.setAttribute("y2", selectorRadius*0.35);
+    ellipseElement.setAttribute("stroke", selectorColor);
+    ellipseElement.setAttribute("stroke-width", 2);
+    groupElement.appendChild(ellipseElement);
+    svgElement.appendChild(groupElement);
+    dialElement.appendChild(svgElement);
+    
+
 
 // Analog Meter
     var digitalMeterElement=document.getElementById('analogMeter');
@@ -629,12 +690,14 @@ function resize() {
     resizeTimeout = setTimeout(function(){
         setupLayout();
         refresh();
+        selectorButtonSelect(selectorSelected);
     },250);
 }
 
 function onload(){
-    console.log("onload");
+//     console.log("onload");
     setupLayout(); 
     refresh();
     bottomButtonSelect(document.getElementById('bottomDigitalButton').id);
+    selectorButtonSelect(selectorSelected);
 }
