@@ -122,7 +122,7 @@ function setPosition(element,left,top,width,height){
 }
 
 function setupLayout() {
-    console.log('setupLayout');
+//     console.log('setupLayout');
 
     setAllDisplay('');
     
@@ -151,13 +151,14 @@ function setupLayout() {
     var areaCenter=Math.floor(areaWidth/2);
     var menuHeight=areaHeight/16;
 
-    // JSON Version
     var jsonElement=document.getElementById('mainContainer');
     setPosition(jsonElement,areaLeft,areaTop,areaWidth,areaHeight-menuHeight);
+    areaLeft-=1;
 
     // JSON Version
     var jsonElement=document.getElementById('jsonDiv');
     jsonElement.innerHTML="";
+    
 
     var jsonTextElement=document.createElement('pre');
     jsonTextElement.classList.add('jsonText');
@@ -167,6 +168,8 @@ function setupLayout() {
     // Text Only
     var textElement=document.getElementById('textDiv');
     textElement.innerHTML="";
+    textElement.style.width="100%";
+    textElement.style.height="100%";
     
     var textPartHeight=areaHeight/4;
     var textValueHeight=textPartHeight*3/4;
@@ -439,7 +442,17 @@ function setupLayout() {
 
     dashboardInfo["analogMeterSvg"]=gauge1;
     
+    var analogUnitLeft=gaugeLeft+(gaugeWidth*2/3);
+    var analogUnitTop=gaugeTop+gaugeHeight-(menuHeight*1.5);
+    var analogUnitWidth=gaugeWidth*2/3;
+    var analogUnitHeight=menuHeight;
+    var analogUnitElement=document.getElementById('analogUnit');
+    setPosition(analogUnitElement,analogUnitLeft,analogUnitTop,analogUnitWidth,analogUnitHeight);
 
+    var analogUnitElement=document.getElementById('analogUnitFrontText');
+    dashboardInfo["analogUnitFrontText"]=analogUnitElement;
+    var analogUnitElement=document.getElementById('analogUnitFrontMulti');
+    dashboardInfo["analogUnitFrontMulti"]=analogUnitElement;
 
 
 // Bottom Menu
@@ -557,20 +570,19 @@ function metricsUpdated(lastModified) {
 
     var needlePercent=metricData[selectorValues[selectorSelected]]/(1000*selectorMax[selectorSelected]);
     dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedle"],needlePercent);
-    console.log(needlePercent);
+//     console.log(needlePercent);
 
-//         Set needles and text values
-//     for (var t=0; t<timeframes.length; t++) {
-//         timeframe=timeframes[t];
-// 
-//         timeframeInfo=dashboardInfo[category][timeframe];
-        
-//             add leading zeros
-//         timeframeInfo.countText.element.innerHTML=`00000${dashboardInfo[category][timeframe].current}`.slice(-6);
-//         timeframeInfo.labelText.element.innerHTML=dashboardInfo[category][timeframe].label;
-//         timeframeInfo.gauge.setNeedle(timeframeInfo.needle,timeframeInfo.currentP);
-//     }
-//     dashboardInfo[category].updated.element.innerHTML="Last Updated: "+dashboardInfo[category].updated.value;
+    if (selectorMax[selectorSelected] == 10) {
+        dashboardInfo["analogUnitFrontText"].innerHTML="kW";
+        dashboardInfo["analogUnitFrontMulti"].innerHTML="";
+    } else {
+        dashboardInfo["analogUnitFrontText"].innerHTML="kWh x";
+        dashboardInfo["analogUnitFrontMulti"].innerHTML=(selectorMax[selectorSelected]/10).toString();
+    }
+// analogUnitFront
+//     dashboardInfo["analogUnitFrontText"]=analogUnitElement;
+//     dashboardInfo["analogUnitFrontMulti"]=analogUnitElement;
+
 }
 
 

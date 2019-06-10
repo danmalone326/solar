@@ -122,6 +122,8 @@ body{
 	width:306px;
  */
 	background-color:#fb7c00;
+    border-radius:6px;
+    border:1px solid #000;
 
 /* 
 	border-radius:9px;
@@ -178,8 +180,8 @@ body{
 
 .analogMeterContainer {
     background-color: white;
-	border-radius:6px;
-	border:1px solid #000;
+    border-radius:6px;
+    border:1px solid #000;
 }
 
 .analogMeterSvg {

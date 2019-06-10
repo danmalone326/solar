@@ -30,9 +30,17 @@
     <body onload="onload();"  onresize="resize();">
         <div id="mainContainer">
             <div id="analogMeter" class="dashboard" >
-            <div id="analogMeterContainer" class="analogMeterContainer">
-            <svg id="analogMeterSvg" class="analogMeterSvg"></svg>
-            </div>
+                <div id="analogMeterContainer" class="analogMeterContainer">
+                    <svg id="analogMeterSvg" class="analogMeterSvg"></svg>
+                    <div id="analogUnit" class="lcdOuter">
+                        <div id="analogUnitBack" class="lcdBack">
+                            <span class="techFont">kWh x</span><span class="sevenSegmentFont">1.0.0.0.</span>
+                        </div>
+                        <div id="analogUnitFront" class="lcdFront">
+                            <span id="analogUnitFrontText" class="techFont"></span><span id="analogUnitFrontMulti" class="sevenSegmentFont"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="digitalMeter" class="dashboard">
