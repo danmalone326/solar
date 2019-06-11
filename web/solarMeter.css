@@ -31,33 +31,21 @@ body{
   transform: translate(-50%, 0%);
 }
 
+.mainContainer {
+    border: 1px solid gray;  
+    border-bottom: none;
+    z-index: 25;  
+}
+
 .dashboard {
     position: absolute;
     background-color: black;
     font-family: 'Share Tech Mono', monospace;
-/* 
-    border: 1px solid gray;
- */
-}
-
-
-.dashboardTitle {
-    color: #ccc;
-    text-align: center;
-    font-size: 5vw;
-    font-variant: small-caps;
-}
-
-.dashboardUpdatedText {
-    color: #4fa524;
-    text-align: center;
-    font-size: 1vw;
 }
 
 
 /* JSON */
 .jsonText {
-    font-size: 2vw;
     color: white;
 }
 
@@ -170,12 +158,14 @@ body{
 .bottomMenuContainer {
     font-family: 'Share Tech Mono', monospace;
     color: #aaa;
-    z-index: 101;    
+    z-index: 20;
 }
 
 .bottomMenu {
 	text-align: center;
     border: 1px solid gray;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
 }
 
 .analogMeterContainer {

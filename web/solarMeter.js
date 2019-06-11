@@ -108,7 +108,7 @@ function calculateCharacterWidth(string,containerElement,maxWidth,maxHeight){
 
     fontSize=fontSize*ratio;
 
-    tempElement.style.display="none";
+    containerElement.removeChild(tempElement);
     
     return fontSize;    
 }
@@ -142,19 +142,27 @@ function setupLayout() {
         areaWidth = Math.floor(areaHeight/ratio);
     }
 
-    var areaLeft = Math.floor((w - areaWidth)/2);
-    var areaTop = Math.floor((h - areaHeight)/2);
+    areaWidth-=2;
+    areaHeight-=8;
+
+    var areaLeft = Math.floor((w - areaWidth)/2)+1;
+    var areaTop = Math.floor((h - areaHeight)/2)+1;
 
 //     console.log(areaWidth);
 //     console.log(areaHeight);
 
-    var areaCenter=Math.floor(areaWidth/2);
-    var menuHeight=areaHeight/16;
+    var areaCenter=Math.floor(usableWidth/2);
 
-    var jsonElement=document.getElementById('mainContainer');
-    setPosition(jsonElement,areaLeft,areaTop,areaWidth,areaHeight-menuHeight);
-    areaLeft-=1;
+    var usableTop=2;
+    var usableLeft=2;
+    var usableWidth=areaWidth-2;
+    var usableHeight=areaHeight-2;
 
+    var menuHeight=usableHeight/16;
+
+    var mainElement=document.getElementById('mainContainer');
+    setPosition(mainElement,areaLeft,areaTop,areaWidth,areaHeight-menuHeight+1);
+    
     // JSON Version
     var jsonElement=document.getElementById('jsonDiv');
     jsonElement.innerHTML="";
@@ -164,6 +172,10 @@ function setupLayout() {
     jsonTextElement.classList.add('jsonText');
     dashboardInfo["jsonTextElement"]=jsonTextElement;
     jsonElement.appendChild(jsonTextElement);
+    
+    var jsonFontSize=areaWidth/18;
+    jsonTextElement.style.fontSize=jsonFontSize;
+
 
     // Text Only
     var textElement=document.getElementById('textDiv');
@@ -171,13 +183,13 @@ function setupLayout() {
     textElement.style.width="100%";
     textElement.style.height="100%";
     
-    var textPartHeight=areaHeight/4;
+    var textPartHeight=usableHeight/4;
     var textValueHeight=textPartHeight*3/4;
     var textTitleHeight=textPartHeight*1/4;
     
-    var thisPartTop=areaTop;
-    var textTitleFontSize=areaWidth/14;
-    var textValueFontSize=areaWidth/7;
+    var thisPartTop=usableTop;
+    var textTitleFontSize=usableWidth/14;
+    var textValueFontSize=usableWidth/7;
     
     var divElement=document.createElement('div');
     divElement.classList.add('textValue');
@@ -226,8 +238,8 @@ function setupLayout() {
     textElement.appendChild(divElement);
 
     // Digital Meter
-    var displayPartHeight=areaHeight/4;
-    var displayPartWidth=areaWidth;  // related to border that is set in css file
+    var displayPartHeight=usableHeight/4;
+    var displayPartWidth=usableWidth;  // related to border that is set in css file
     
     var digitalMeterElement=document.getElementById('digitalMeter');
     
@@ -239,7 +251,7 @@ function setupLayout() {
     var displayRowGap=displayPartWidth/55;
         
     var mainDigitalRowTop=displayInnerBorder;
-    var mainDigitalRowWidth=areaWidth-(displayInnerBorder*2);
+    var mainDigitalRowWidth=usableWidth-(displayInnerBorder*2);
     
 //     MAIN ROW
     var divElement=document.getElementById('mainDigitalRow');
@@ -327,9 +339,9 @@ function setupLayout() {
     divElement.style.height=displayPartHeight;
     
 //  Selector
-    var selectorWidth=areaWidth - menuHeight*2;
+    var selectorWidth=usableWidth - menuHeight*2;
     var selectorHeight=selectorWidth;
-    var selectorTop=areaHeight - menuHeight - (menuHeight/2) - selectorHeight;
+    var selectorTop=usableHeight - menuHeight - (menuHeight/2) - selectorHeight;
     var selectorLeft=menuHeight;
     var selectorRadius=(selectorWidth/2)*0.90;
     var selectorColor="#777";
@@ -418,9 +430,9 @@ function setupLayout() {
 // Analog Meter
     var analogMeterElement=document.getElementById('analogMeter');
 
-    var gaugeWidth=areaWidth;
+    var gaugeWidth=usableWidth;
     var gaugeHeight=selectorTop - menuHeight;
-    var gaugeTop=0
+    var gaugeTop=0;
     var gaugeLeft=0;
     
     var analogMeterElement=document.getElementById('analogMeterContainer');
@@ -444,7 +456,7 @@ function setupLayout() {
     
     var analogUnitLeft=gaugeLeft+(gaugeWidth*2/3);
     var analogUnitTop=gaugeTop+gaugeHeight-(menuHeight*1.5);
-    var analogUnitWidth=gaugeWidth*2/3;
+    var analogUnitWidth=gaugeWidth-analogUnitLeft;
     var analogUnitHeight=menuHeight;
     var analogUnitElement=document.getElementById('analogUnit');
     setPosition(analogUnitElement,analogUnitLeft,analogUnitTop,analogUnitWidth,analogUnitHeight);
@@ -462,24 +474,26 @@ function setupLayout() {
 
 // 4 Buttons
     var numButtons=4;
-    var buttonWidth=areaWidth/numButtons;
+    var buttonTop=1;
+    var buttonWidth=(areaWidth/numButtons);
+    var buttonHeight=menuHeight-2;
     var buttonFontSize=calculateCharacterWidth('Digital',divElement,buttonWidth-(displayInnerBorder*2),menuHeight-(displayInnerBorder*2));
 
     
     var divElement=document.getElementById('bottomAnalogButton');
-    setPosition(divElement,0*buttonWidth,0,buttonWidth,menuHeight);
+    setPosition(divElement,0*buttonWidth-1,buttonTop,buttonWidth,buttonHeight);
     divElement.style.fontSize=buttonFontSize;
     
     var divElement=document.getElementById('bottomDigitalButton');
-    setPosition(divElement,1*buttonWidth,0,buttonWidth,menuHeight);
+    setPosition(divElement,1*buttonWidth-1,buttonTop,buttonWidth,buttonHeight);
     divElement.style.fontSize=buttonFontSize;
     
     var divElement=document.getElementById('bottomTextButton');
-    setPosition(divElement,2*buttonWidth,0,buttonWidth,menuHeight);
+    setPosition(divElement,2*buttonWidth-1,buttonTop,buttonWidth,buttonHeight);
     divElement.style.fontSize=buttonFontSize;
     
     var divElement=document.getElementById('bottomJsonButton');
-    setPosition(divElement,3*buttonWidth,0,buttonWidth,menuHeight);
+    setPosition(divElement,3*buttonWidth-1,buttonTop,buttonWidth,buttonHeight);
     divElement.style.fontSize=buttonFontSize;
     
     setAllDisplay('none');
@@ -526,9 +540,10 @@ function format7SegmentHHMI(dateStr) {
 // This function is called whenever new metrics data has been loaded.
 // lastModified is from the Last Updated header in the HTTP response
 function metricsUpdated(lastModified) {
-//     var tempValue=0;
 
-    dashboardInfo["jsonTextElement"].textContent=JSON.stringify(metricData, Object.keys(metricData).sort(), 2);
+    var jsonString=JSON.stringify(metricData, Object.keys(metricData).sort(), 2);
+    var jsonNew = jsonString.replace(/: /g, ":\n      ");
+    dashboardInfo["jsonTextElement"].textContent=jsonNew;
     
     dashboardInfo["textNowValue"].innerHTML=(Math.round(metricData["currentPower"])/1000).toFixed(3)+" kW";
     dashboardInfo["textTodayValue"].innerHTML=(Math.round(metricData["lastDayEnergy"])/1000).toFixed(3)+" kWh";
