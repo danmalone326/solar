@@ -589,7 +589,7 @@ function metricsUpdated(lastModified) {
 
     if (selectorMax[selectorSelected] == 10) {
         dashboardInfo["analogUnitFrontText"].innerHTML="kW";
-        dashboardInfo["analogUnitFrontMulti"].innerHTML="";
+        dashboardInfo["analogUnitFrontMulti"].innerHTML="!";
     } else {
         dashboardInfo["analogUnitFrontText"].innerHTML="kWh x";
         dashboardInfo["analogUnitFrontMulti"].innerHTML=(selectorMax[selectorSelected]/10).toString();
