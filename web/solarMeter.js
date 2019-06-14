@@ -442,10 +442,13 @@ function setupLayout() {
     analogMeterElement.style.fontSize=labelFontSize;
 
     var gauge1 = new Gauge('analogMeterSvg',105,0);
-    gauge1.addTicks(0.95,21,0.025,'analogMeterTicks',"top");
+    gauge1.addTicks(0.95,101,0.025,'analogMeterTicks',"top");
     gauge1.addTicks(0.95,11,0.05,'analogMeterTicks',"top");
     gauge1.addArc(0.95,'analogMeterArc');
-    gauge1.addNumberLabels(0.85,0,10,11,'analogMeterLabel');
+    gauge1.addTicks(0.75,21,0.025,'analogMeterTicks',"center");
+    gauge1.addArc(0.75,'analogMeterArc');
+    gauge1.addNumberLabels(0.83,0,10,11,'analogMeterLabel');
+    gauge1.addArc(0.075,'analogMeterCenter',-1.2,2.2);
 
     needle = gauge1.addNeedle(1,0,'analogMeterNeedle');
     dashboardInfo["analogMeterNeedle"]=needle;

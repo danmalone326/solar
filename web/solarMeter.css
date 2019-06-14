@@ -194,6 +194,12 @@ body{
     fill: none;
 }
 
+.analogMeterCenter {
+    stroke: #000;
+    stroke-width: 1px;
+    fill: #000;
+}
+
 .analogMeterLabel {
     fill: #000;
 }
