@@ -113,6 +113,13 @@ def getCurrentSunData(siteInfo,forDt):
         print "Unable to get sun data."
         print 'getSunData: {}'.format(e.code)
         sunDict=None
+    
+    except urllib2.URLError as e:
+        # This means something went wrong.
+        print "Unable to get sun data."
+        print 'getSunData: '
+        print e.reason
+        sunDict=None
 
     return sunDict
 
