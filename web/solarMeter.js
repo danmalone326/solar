@@ -532,8 +532,10 @@ function format7SegmentDate(dateStr) {
 //     and includes 7 segment formatting
 function format7SegmentHHMI(dateStr) {
     var h=parseInt(dateStr.substring(11,13), 10);
+    var pClass='';
     var p='';
-    if (h>11) {p='P'}
+    if (h>11) {pClass='lcdFront'} else {pClass='lcdBack'}
+    var p='<span class="techFont ' + pClass + '">P</span>';
     if (h>12) {h-=12}
     if (h==0) {h=12}
     var tempString=h.toString().padStart(2,'!')+dateStr.substring(13,16)+' '+p;
