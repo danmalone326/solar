@@ -39,7 +39,7 @@ def updateOverview(siteInfo):
     updated = False
     
     lastOverview = database.getLastOverview(siteInfo)
-    savedSunData = database.getSunData(siteInfo)
+    savedSunData = getBestSunData(siteInfo)
 
     sunriseDT = datetime.strptime(savedSunData['sunrise'],database.datetimeFormat)
     sunsetDT = datetime.strptime(savedSunData['sunset'],database.datetimeFormat)
@@ -218,7 +218,7 @@ def getBestSunData(siteInfo):
 
 def outputJSON(siteInfo):
     restData = database.getLastOverview(siteInfo)
-    restData.update(database.getSunData(siteInfo))
+    restData.update(getBestSunData(siteInfo))
 
     with open(siteInfo['name']+'.json', 'w') as output:
         json.dump(restData, output)
