@@ -68,24 +68,17 @@ def getSunData(siteInfo):
 
     sunData={}
     dbCursor.execute('''
-    SELECT date,sunrise,sunset
+    SELECT date,sunrise,sunset,tzOffset
       FROM sunData
      WHERE siteId = ?
     ''',(siteInfo['id'],))
 
-    result = dbCursor.fetchone()
-
-    if (result is None):
-        sunData['sundate']=None
-        sunData['sunrise']=None
-        sunData['sunset']=None
-    else:
-        sunData['sundate']=result[0]
-        sunData['sunrise']=result[1]
-        sunData['sunset']=result[2]
-#         sunData['date']=datetime.strptime(result[0],dateOnlyFormat).date()
-#         sunData['sunrise']=datetime.strptime(result[1],datetimeFormat)
-#         sunData['sunset']=datetime.strptime(result[2],datetimeFormat)
+    for row in dbCursor:
+        tempDate=row[0]
+        sunData[tempDate]={}
+        sunData[tempDate]['sunrise']=row[1]
+        sunData[tempDate]['sunset']=row[2]
+        sunData[tempDate]['tzOffset']=row[3]
 
     return sunData
 
@@ -97,13 +90,17 @@ def setSunData(siteInfo,sunData):
      WHERE siteId=?
     ''', (siteInfo['id'],))
 
-    dbCursor.execute('''
-    INSERT INTO sunData (siteId,date,sunrise,sunset)
-           VALUES(?,?,?,?)
-    ''', (siteInfo['id'],
-          sunData['sundate'].strftime(dateOnlyFormat),
-          sunData['sunrise'].strftime(datetimeFormat),
-          sunData['sunset'].strftime(datetimeFormat),))
+    for thisDate in sunData:
+        thisSunData = sunData[thisDate]
+        
+        dbCursor.execute('''
+        INSERT INTO sunData (siteId,date,sunrise,sunset,tzOffset)
+               VALUES(?,?,?,?,?)
+        ''', (siteInfo['id'],
+              thisDate,
+              thisSunData['sunrise'],
+              thisSunData['sunset'],
+              thisSunData['tzOffset'],))
 
     dbConnection.commit()
 

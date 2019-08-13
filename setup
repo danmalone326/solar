@@ -30,12 +30,14 @@ CREATE TABLE sites
              )
 ''')
 
+# alter table sunData add tzOffset text;
 cursor.execute('''
 CREATE TABLE sunData
-             (siteId  text,
-              date    text,
-              sunrise text,
-              sunset  text
+             (siteId   text,
+              date     text,
+              sunrise  text,
+              sunset   text,
+              tzOffset text
              )
 ''')
 

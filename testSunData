@@ -6,68 +6,14 @@ from datetime import datetime, timedelta
 import time
 import urllib,urllib2
 
-debug = False
+debug = True
+
+dateOnlyFormat='%Y-%m-%d'
+datetimeFormat='%Y-%m-%d %H:%M:%S'
+
 
 milDateFormat="%m/%d/%Y"
 milDateTimeFormat="%m/%d/%Y %H:%M"
-
-def getCurrentOverview(siteInfo):
-    restURL = 'https://monitoringapi.solaredge.com/site/'+siteInfo['id']+'/overview?api_key='+siteInfo['apiKey']
-    try:
-        restResponse = urllib2.urlopen(restURL)
-    except urllib2.HTTPError as e:
-        # This means something went wrong.
-        raise Exception('getCurrentData: {}'.format(e.code))
-        
-    overview = json.loads(restResponse.read().encode("utf-8"))
-    
-#     with open('overview.json', 'r') as file:
-#         overview = json.load(file)
-
-    overviewDict={}
-    overviewDict['queryTime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    overviewDict['lastUpdateTime'] = overview['overview']['lastUpdateTime'].encode("utf-8")
-    overviewDict['currentPower'] = overview['overview']['currentPower']['power']
-    overviewDict['lastDayEnergy'] = overview['overview']['lastDayData']['energy']
-    overviewDict['lastMonthEnergy'] = overview['overview']['lastMonthData']['energy']
-    overviewDict['lastYearEnergy'] = overview['overview']['lastYearData']['energy']
-    overviewDict['lifetimeEnergy'] = overview['overview']['lifeTimeData']['energy']
-
-    return overviewDict
-
-def updateOverview(siteInfo):
-    updated = False
-    
-    lastOverview = database.getLastOverview(siteInfo)
-    savedSunData = database.getSunData(siteInfo)
-
-    sunriseDT = datetime.strptime(savedSunData['sunrise'],database.datetimeFormat)
-    sunsetDT = datetime.strptime(savedSunData['sunset'],database.datetimeFormat)
-    now = datetime.now()
-    nowMinute = int(now.strftime('%M'))
-
-    if ((nowMinute == 0) or                    # Always once an hour
-        (lastOverview["currentPower"] > 0) or  # If we were generating at the last update
-        ((now > sunriseDT) and (now < sunsetDT))): # Sun is up
-
-        if debug:
-            print "Updating"
-        
-        currentData = getCurrentOverview(siteInfo)
-        updated = True
-
-        if debug:
-            print "current:"
-            print currentData
-    
-        if (currentData['lastUpdateTime'] > lastOverview['lastUpdateTime']):
-            database.insertOverview(siteInfo,currentData)
-        else:
-            if debug:
-                print "no update"
-    
-    return updated
-
 
 def tzOffset():
     timestamp = time.time()
@@ -145,7 +91,7 @@ def updateSunData(siteInfo):
     if debug:
         print tzStr
 
-    savedSunData=database.getSunData(siteInfo)
+    savedSunData=database.getSunData2(siteInfo)
     if debug:
         print "savedSunData:"
         print(json.dumps(savedSunData, indent=4, sort_keys=True))
@@ -195,13 +141,13 @@ def updateSunData(siteInfo):
             if debug:
                 print "saving SunData:"
                 print(json.dumps(savedSunData, indent=4, sort_keys=True))
-            database.setSunData(siteInfo,savedSunData)
+            database.setSunData2(siteInfo,savedSunData)
 
     return updated
 
 
 def getBestSunData(siteInfo):
-    savedSunData=database.getSunData(siteInfo)
+    savedSunData=database.getSunData2(siteInfo)
     
     nowDate = datetime.now().date()
     nowDateStr=nowDate.strftime(database.dateOnlyFormat)
@@ -216,27 +162,67 @@ def getBestSunData(siteInfo):
     
     return result
 
-def outputJSON(siteInfo):
-    restData = database.getLastOverview(siteInfo)
-    restData.update(database.getSunData(siteInfo))
-
-    with open(siteInfo['name']+'.json', 'w') as output:
-        json.dump(restData, output)
-
-
 #
 # main
 #
 
 siteInfo = database.getSiteInfo("dmalone")
+updateSunData(siteInfo)
+print(json.dumps(getBestSunData(siteInfo), indent=4, sort_keys=True)) 
 
-updated = False
+# updated = False
+# 
+# if updateSunData(siteInfo):
+#     updated = True
+# 
+# if updateOverview(siteInfo):
+#     updated = True
+# 
+# if updated:
+#     outputJSON(siteInfo)
 
-if updateSunData(siteInfo):
-    updated = True
+# result = database.getSunData2(siteInfo)
+# 
+# print(json.dumps(result, indent=4, sort_keys=True))
+# 
+# 
+# comp = '2019-08-07'
+# 
+# print max(result)
+# 
+# for key in sorted(result):
+#     print key
+#     if (key<comp):
+#         print "\tless"
+#     if (key==comp):
+#         print "\tsame"
+#     if (key>comp):
+#         print "\tmore"
+#     last = result[key]
+#     
+# print key
+# print last
+# 
+# 
+# nowDT = datetime.now().date()
+# nowDate=nowDT.strftime(database.dateOnlyFormat)
+# nowHour=int(datetime.now().strftime('%H'))
+# if debug:
+#     print nowDT
+#     print nowDate
+#     print nowHour
 
-if updateOverview(siteInfo):
-    updated = True
 
-if updated:
-    outputJSON(siteInfo)
+# y='2019-08-09'
+# x = getCurrentSunData(siteInfo,y)
+# print(json.dumps(x, indent=4, sort_keys=True))
+# result[y]=x
+
+# database.setSunData2(siteInfo,result)
+# 
+# 
+# result = database.getSunData2(siteInfo)
+# 
+# print(json.dumps(result, indent=4, sort_keys=True))
+
+

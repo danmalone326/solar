@@ -1,5 +1,6 @@
 # ignore database files
 *.db
+*.db.bak
 
 # ignore ini (legacy) files
 *.ini
