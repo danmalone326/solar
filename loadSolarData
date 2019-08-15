@@ -8,6 +8,9 @@ import urllib,urllib2
 
 debug = False
 
+dateOnlyFormat='%Y-%m-%d'
+datetimeFormat='%Y-%m-%d %H:%M:%S'
+
 milDateFormat="%m/%d/%Y"
 milDateTimeFormat="%m/%d/%Y %H:%M"
 
