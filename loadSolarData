@@ -8,8 +8,9 @@ import urllib,urllib2
 
 debug = False
 
-dateOnlyFormat='%Y-%m-%d'
-datetimeFormat='%Y-%m-%d %H:%M:%S'
+# Should use database versions of these variables, e.g. database.dateOnlyFormat
+# dateOnlyFormat='%Y-%m-%d'
+# datetimeFormat='%Y-%m-%d %H:%M:%S'
 
 milDateFormat="%m/%d/%Y"
 milDateTimeFormat="%m/%d/%Y %H:%M"
@@ -106,9 +107,9 @@ def getCurrentSunData(siteInfo,forDateStr,tzStr):
         sunDict['tzOffset']=tzStr
         for dataset in responseData['sundata']:
             if (dataset['phen']=='R'):
-                sunDict['sunrise']=datetime.strptime(forDtMilStr+" "+dataset['time'],milDateTimeFormat).strftime(datetimeFormat)
+                sunDict['sunrise']=datetime.strptime(forDtMilStr+" "+dataset['time'],milDateTimeFormat).strftime(database.datetimeFormat)
             elif (dataset['phen']=='S'):
-                sunDict['sunset']=datetime.strptime(forDtMilStr+" "+dataset['time'],milDateTimeFormat).strftime(datetimeFormat)
+                sunDict['sunset']=datetime.strptime(forDtMilStr+" "+dataset['time'],milDateTimeFormat).strftime(database.datetimeFormat)
     
     except urllib2.HTTPError as e:
         # This means something went wrong.
