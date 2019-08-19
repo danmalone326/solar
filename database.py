@@ -240,7 +240,7 @@ def getWeeklyBetween(siteInfo,fromDateStr,toDateStr):
            sum(lastDayEnergy)
       FROM (SELECT substr(lastUpdateTime,1,10),
                    max(date(lastUpdateTime,'-6 days','weekday 0')) as week,
-                   max(lastDayEnergy) lastDayEnergyoverview
+                   max(lastDayEnergy) lastDayEnergy
               FROM overview
              WHERE siteId=?
                AND lastUpdateTime>=?
