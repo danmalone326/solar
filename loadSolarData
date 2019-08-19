@@ -87,7 +87,7 @@ def tzOffset():
     
 def getCurrentSunData(siteInfo,forDateStr,tzStr):
     
-    forDtMilStr = datetime.strptime(forDateStr, dateOnlyFormat).strftime(milDateFormat)
+    forDtMilStr = datetime.strptime(forDateStr, database.dateOnlyFormat).strftime(milDateFormat)
     if debug:
         print forDtMilStr
     # https://api.usno.navy.mil/rstt/oneday?date=5/15/2019&coords=35.134686,-120.562267&tz=-07
