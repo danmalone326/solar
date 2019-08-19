@@ -450,6 +450,9 @@ function setupLayout() {
     gauge1.addNumberLabels(0.83,0,10,11,'analogMeterLabel');
     gauge1.addArc(0.075,'analogMeterCenter',-1.2,2.2);
 
+    needlePeak = gauge1.addNeedle(1,0,'analogMeterNeedlePeak');
+    dashboardInfo["analogMeterNeedlePeak"]=needlePeak;
+
     needle = gauge1.addNeedle(1,0,'analogMeterNeedle');
     dashboardInfo["analogMeterNeedle"]=needle;
 
@@ -591,6 +594,12 @@ function metricsUpdated(lastModified) {
     var needlePercent=metricData[selectorValues[selectorSelected]]/(1000*selectorMax[selectorSelected]);
     dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedle"],needlePercent);
 //     console.log(needlePercent);
+
+    if (selectorValues[selectorSelected] == "currentPower") {
+        needlePercent=metricData["peakPower"]/(1000*selectorMax[selectorSelected]);
+    }
+    dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedlePeak"],needlePercent);
+
 
     if (selectorMax[selectorSelected] == 10) {
         dashboardInfo["analogUnitFrontText"].innerHTML="kW";

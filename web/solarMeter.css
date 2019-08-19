@@ -210,6 +210,11 @@ body{
     stroke-width: 1px;    
 }
 
+.analogMeterNeedlePeak {
+    stroke: red;
+    stroke-width: 1px;    
+}
+
 .gauge {
 /* 
     border: 1px solid gray;
