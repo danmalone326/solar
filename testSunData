@@ -8,8 +8,9 @@ import urllib,urllib2
 
 debug = True
 
-dateOnlyFormat='%Y-%m-%d'
-datetimeFormat='%Y-%m-%d %H:%M:%S'
+# Should use database versions of these variables, e.g. database.dateOnlyFormat
+# dateOnlyFormat='%Y-%m-%d'
+# datetimeFormat='%Y-%m-%d %H:%M:%S'
 
 
 milDateFormat="%m/%d/%Y"
@@ -49,9 +50,9 @@ def getCurrentSunData(siteInfo,forDateStr,tzStr):
         sunDict['tzOffset']=tzStr
         for dataset in responseData['sundata']:
             if (dataset['phen']=='R'):
-                sunDict['sunrise']=datetime.strptime(forDtMilStr+" "+dataset['time'],milDateTimeFormat).strftime(datetimeFormat)
+                sunDict['sunrise']=datetime.strptime(forDtMilStr+" "+dataset['time'],milDateTimeFormat).strftime(database.datetimeFormat)
             elif (dataset['phen']=='S'):
-                sunDict['sunset']=datetime.strptime(forDtMilStr+" "+dataset['time'],milDateTimeFormat).strftime(datetimeFormat)
+                sunDict['sunset']=datetime.strptime(forDtMilStr+" "+dataset['time'],milDateTimeFormat).strftime(database.datetimeFormat)
     
     except urllib2.HTTPError as e:
         # This means something went wrong.
@@ -147,7 +148,7 @@ def updateSunData(siteInfo):
 
 
 def getBestSunData(siteInfo):
-    savedSunData=database.getSunData2(siteInfo)
+    savedSunData=database.getSunData(siteInfo)
     
     nowDate = datetime.now().date()
     nowDateStr=nowDate.strftime(database.dateOnlyFormat)
@@ -162,13 +163,86 @@ def getBestSunData(siteInfo):
     
     return result
 
+def getLast24Hours(siteInfo):
+    toDate = datetime.now()
+    fromDate = toDate - timedelta(days=1)
+
+    toDateStr=toDate.strftime(database.datetimeFormat)
+    fromDateStr=fromDate.strftime(database.datetimeFormat)
+    
+    print fromDateStr
+    print toDateStr
+    
+    return database.getCurrentBetween(siteInfo,fromDateStr,toDateStr)
+
+def generateRestData(siteInfo):
+    currentTime = datetime.now()
+    currentTimeStr = currentTime.strftime(database.datetimeFormat)
+
+    # Get right now data
+    restData = {}
+    restData['now'] = database.getClosestOverview(siteInfo,currentTimeStr)
+    restData['now'].update(getBestSunData(siteInfo))
+    
+    # Get data from this time yesterday
+    thisTimeYesterday = currentTime - timedelta(days=1)
+    thisTimeYesterdayStr = thisTimeYesterday.strftime(database.datetimeFormat)
+    restData['yesterday'] = database.getClosestOverview(siteInfo,thisTimeYesterdayStr)
+    
+    # Get peaks for today and yesterday
+    yesterdayStart = thisTimeYesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterdayStartStr = yesterdayStart.strftime(database.datetimeFormat)
+    
+    peaks = database.getDailyBetween(siteInfo,yesterdayStartStr,currentTimeStr)
+    
+    currentDateStr = currentTime.strftime(database.dateOnlyFormat)
+    yesterdayDateStr = yesterdayStart.strftime(database.dateOnlyFormat)
+
+    restData['now']['peakPower'] = peaks[currentDateStr]['peakPower']
+
+    restData['yesterday']['peakPower'] = peaks[yesterdayDateStr]['peakPower']
+    restData['yesterday']['maxEnergy'] = peaks[yesterdayDateStr]['energy']  
+    
+    # Get 30 day averages for peak power and energy
+    # and daily details
+    numDays = 30
+    averageStartDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=numDays)
+    averageEndDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+    
+    restData['30days'] = database.getAverageDayValues(siteInfo,averageStartDate,averageEndDate)
+    restData['30days']['detail'] = database.getDailyBetween(siteInfo,averageStartDate,currentTime)
+    
+    # Get weekly details
+    numWeeks = 12
+    weeklyStartDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=currentTime.weekday()) - timedelta(days=numWeeks*7)
+    
+    restData['weekly'] = {}
+    restData['weekly']['detail'] = database.getWeeklyBetween(siteInfo,weeklyStartDate,currentTime)
+    
+    # Get Monthly details
+    numMonths = 12
+    monthlyStartDate = currentTime - timedelta(days=numMonths*30)
+    monthlyStartDate = monthlyStartDate.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    restData['monthly'] = {}
+    restData['monthly']['detail'] = database.getMonthlyBetween(siteInfo,monthlyStartDate,currentTime)
+    
+    return restData  
+    
 #
 # main
 #
 
 siteInfo = database.getSiteInfo("dmalone")
-updateSunData(siteInfo)
-print(json.dumps(getBestSunData(siteInfo), indent=4, sort_keys=True)) 
+# updateSunData(siteInfo)
+
+# print(json.dumps(getLast24Hours(siteInfo), indent=4, sort_keys=True)) 
+
+print(json.dumps(generateRestData(siteInfo), indent=4, sort_keys=True)) 
+
+# currentTime = datetime.now()
+# print currentTime
+# print currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
 
 # updated = False
 # 

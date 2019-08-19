@@ -103,7 +103,7 @@ def setSunData(siteInfo,sunData):
               thisSunData['tzOffset'],))
 
     dbConnection.commit()
-
+    
 def getOverview(siteInfo,updateTime):
     openCursor()
 
@@ -127,6 +127,159 @@ def getOverview(siteInfo,updateTime):
         overviewDict["lifetimeEnergy"]=overviewRow[7]
    
     return overviewDict
+
+def getClosestOverview(siteInfo,dateStr):
+    openCursor()
+
+    dbCursor.execute('''
+    SELECT max(lastUpdateTime)
+      FROM overview
+     WHERE siteId=?
+       AND lastUpdateTime<=?
+    ''',(siteInfo['id'],dateStr,))
+
+    row = dbCursor.fetchone()
+    
+    if (row is None):
+        result={}
+    else:
+        result=getOverview(siteInfo,row[0])
+    
+    return result
+
+def getCurrentBetween(siteInfo,fromDateStr,toDateStr):
+    openCursor()
+
+    dbCursor.execute('''
+    SELECT lastUpdateTime,
+           currentPower
+      FROM overview
+     WHERE siteId=?
+       AND lastUpdateTime>=?
+       AND lastUpdateTime<=?
+    ''',(siteInfo['id'],fromDateStr,toDateStr,))
+
+    tempDict={}
+
+    for row in dbCursor:
+        tempDict[row[0]]=row[1]
+   
+    return tempDict
+
+def getAverageDayValues(siteInfo,fromDateStr,toDateStr):
+    openCursor()
+
+# select substr(lastUpdateTime,1,10),max(lastDayEnergy) from overview group by substr(lastUpdateTime,1,10);
+    dbCursor.execute('''
+        SELECT max(energy) maxEnergy,
+               avg(energy) avgEnergy,
+               max(peakPower) maxPeakPower,
+               avg(peakPower) avgPeakPower
+          FROM (
+            SELECT substr(lastUpdateTime,1,10),
+                   max(lastDayEnergy) energy,
+                   max(currentPower) peakPower
+              FROM overview
+             WHERE siteId=?
+               AND lastUpdateTime>=?
+               AND lastUpdateTime<=?
+             GROUP BY substr(lastUpdateTime,1,10)
+                )
+    ''',(siteInfo['id'],fromDateStr,toDateStr,))
+
+    row = dbCursor.fetchone()
+
+    tempDict={}
+    tempDict['maxEnergy']=row[0]
+    tempDict['avgEnergy']=row[1]
+    tempDict['maxPeakPower']=row[2]
+    tempDict['avgPeakPower']=row[3]
+    
+    return tempDict
+
+
+def getDailyBetween(siteInfo,fromDateStr,toDateStr):
+    openCursor()
+
+# select substr(lastUpdateTime,1,10),max(lastDayEnergy) from overview group by substr(lastUpdateTime,1,10);
+    dbCursor.execute('''
+    SELECT substr(lastUpdateTime,1,10),
+           max(lastDayEnergy),
+           max(currentPower)
+      FROM overview
+     WHERE siteId=?
+       AND lastUpdateTime>=?
+       AND lastUpdateTime<=?
+     GROUP BY substr(lastUpdateTime,1,10)
+    ''',(siteInfo['id'],fromDateStr,toDateStr,))
+
+    tempDict={}
+
+    for row in dbCursor:
+        dateStr=row[0]
+        tempDict[dateStr]={}
+        tempDict[dateStr]['energy']=row[1]
+        tempDict[dateStr]['peakPower']=row[2]
+   
+    return tempDict
+
+# select week, sum(lastDayEnergy)
+# from (
+# select substr(lastUpdateTime,1,10),
+#        date(lastUpdateTime,'-7 days','weekday 0') as week,
+#        max(lastDayEnergy) lastDayEnergy
+# from overview 
+# group by substr(lastUpdateTime,1,10)
+# )
+# group by week;
+def getWeeklyBetween(siteInfo,fromDateStr,toDateStr):
+    openCursor()
+
+    dbCursor.execute('''
+    SELECT week,
+           sum(lastDayEnergy)
+      FROM (SELECT substr(lastUpdateTime,1,10),
+                   max(date(lastUpdateTime,'-6 days','weekday 0')) as week,
+                   max(lastDayEnergy) lastDayEnergy
+              FROM overview
+             WHERE siteId=?
+               AND lastUpdateTime>=?
+               AND lastUpdateTime<=?
+             GROUP BY substr(lastUpdateTime,1,10))
+     GROUP BY week
+    ''',(siteInfo['id'],fromDateStr,toDateStr,))
+
+    tempDict={}
+
+    for row in dbCursor:
+        tempDict[row[0]]=row[1]
+   
+    return tempDict
+
+
+
+def getMonthlyBetween(siteInfo,fromDateStr,toDateStr):
+    openCursor()
+
+# select substr(lastUpdateTime,1,7),max(lastMonthEnergy) from overview group by substr(lastUpdateTime,1,7);
+    dbCursor.execute('''
+    SELECT substr(lastUpdateTime,1,7),
+           max(lastMonthEnergy)
+      FROM overview
+     WHERE siteId=?
+       AND lastUpdateTime>=?
+       AND lastUpdateTime<=?
+     GROUP BY substr(lastUpdateTime,1,7)
+    ''',(siteInfo['id'],fromDateStr,toDateStr,))
+
+    tempDict={}
+
+    for row in dbCursor:
+        tempDict[row[0]]=row[1]
+   
+    return tempDict
+
+
 
 def getLastUpdateTime(siteInfo):
     openCursor()
