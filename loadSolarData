@@ -220,9 +220,62 @@ def getBestSunData(siteInfo):
     
     return result
 
+def generateRestData(siteInfo):
+    currentTime = datetime.now()
+    currentTimeStr = currentTime.strftime(database.datetimeFormat)
+
+    # Get right now data
+    restData = {}
+    restData['now'] = database.getClosestOverview(siteInfo,currentTimeStr)
+    restData['now'].update(getBestSunData(siteInfo))
+    
+    # Get data from this time yesterday
+    thisTimeYesterday = currentTime - timedelta(days=1)
+    thisTimeYesterdayStr = thisTimeYesterday.strftime(database.datetimeFormat)
+    restData['yesterday'] = database.getClosestOverview(siteInfo,thisTimeYesterdayStr)
+    
+    # Get peaks for today and yesterday
+    yesterdayStart = thisTimeYesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterdayStartStr = yesterdayStart.strftime(database.datetimeFormat)
+    
+    peaks = database.getDailyBetween(siteInfo,yesterdayStartStr,currentTimeStr)
+    
+    currentDateStr = currentTime.strftime(database.dateOnlyFormat)
+    yesterdayDateStr = yesterdayStart.strftime(database.dateOnlyFormat)
+
+    restData['now']['peakPower'] = peaks[currentDateStr]['peakPower']
+
+    restData['yesterday']['peakPower'] = peaks[yesterdayDateStr]['peakPower']
+    restData['yesterday']['maxEnergy'] = peaks[yesterdayDateStr]['energy']  
+    
+    # Get 30 day averages for peak power and energy
+    # and daily details
+    numDays = 30
+    averageStartDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=numDays)
+    averageEndDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
+    
+    restData['30days'] = database.getAverageDayValues(siteInfo,averageStartDate,averageEndDate)
+    restData['30days']['detail'] = database.getDailyBetween(siteInfo,averageStartDate,currentTime)
+    
+    # Get weekly details
+    numWeeks = 12
+    weeklyStartDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=currentTime.weekday()) - timedelta(days=numWeeks*7)
+    
+    restData['weekly'] = {}
+    restData['weekly']['detail'] = database.getWeeklyBetween(siteInfo,weeklyStartDate,currentTime)
+    
+    # Get Monthly details
+    numMonths = 12
+    monthlyStartDate = currentTime - timedelta(days=numMonths*30)
+    monthlyStartDate = monthlyStartDate.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    restData['monthly'] = {}
+    restData['monthly']['detail'] = database.getMonthlyBetween(siteInfo,monthlyStartDate,currentTime)
+    
+    return restData  
+    
 def outputJSON(siteInfo):
-    restData = database.getLastOverview(siteInfo)
-    restData.update(getBestSunData(siteInfo))
+    restData = generateRestData(siteInfo)
 
     with open(siteInfo['name']+'.json', 'w') as output:
         json.dump(restData, output)

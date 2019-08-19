@@ -623,7 +623,8 @@ function loadJSON(url,callback) {
 function loadMetricData() {
     loadJSON(metricDataURL,function(response,lastModified) {
         // Parse JSON string into object
-        metricData = JSON.parse(response);
+        tempData = JSON.parse(response);
+        metricData = tempData['now'];
         metricsUpdated(lastModified);
     }); 
 }

@@ -204,13 +204,28 @@ def generateRestData(siteInfo):
     restData['yesterday']['maxEnergy'] = peaks[yesterdayDateStr]['energy']  
     
     # Get 30 day averages for peak power and energy
-    averageDays = 30
-    averageStartDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=averageDays)
+    # and daily details
+    numDays = 30
+    averageStartDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=numDays)
     averageEndDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(seconds=1)
     
     restData['30days'] = database.getAverageDayValues(siteInfo,averageStartDate,averageEndDate)
     restData['30days']['detail'] = database.getDailyBetween(siteInfo,averageStartDate,currentTime)
     
+    # Get weekly details
+    numWeeks = 12
+    weeklyStartDate = currentTime.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=currentTime.weekday()) - timedelta(days=numWeeks*7)
+    
+    restData['weekly'] = {}
+    restData['weekly']['detail'] = database.getWeeklyBetween(siteInfo,weeklyStartDate,currentTime)
+    
+    # Get Monthly details
+    numMonths = 12
+    monthlyStartDate = currentTime - timedelta(days=numMonths*30)
+    monthlyStartDate = monthlyStartDate.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    restData['monthly'] = {}
+    restData['monthly']['detail'] = database.getMonthlyBetween(siteInfo,monthlyStartDate,currentTime)
     
     return restData  
     
