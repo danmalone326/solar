@@ -11,6 +11,9 @@
 # sample data
 sampleData/
 
+# .htaccess files
+.htaccess
+
 # output JSON files
 *.json
 
