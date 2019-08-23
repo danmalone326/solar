@@ -449,13 +449,14 @@ function setupLayout() {
     gauge1.addArc(0.75,'analogMeterArc');
     gauge1.addNumberLabels(0.83,0,10,11,'analogMeterLabel');
 
-    needlePeak = gauge1.addNeedle(1,0,'analogMeterNeedlePeak');
+    var centerSize = 0.075;
+    needlePeak = gauge1.addNeedle(1,centerSize,'analogMeterNeedlePeak');
     dashboardInfo["analogMeterNeedlePeak"]=needlePeak;
 
-    needle = gauge1.addNeedle(1,0,'analogMeterNeedle');
+    needle = gauge1.addNeedle(1,centerSize,'analogMeterNeedle');
     dashboardInfo["analogMeterNeedle"]=needle;
 
-    gauge1.addArc(0.075,'analogMeterCenter',-1.2,2.2);
+    gauge1.addArc(centerSize,'analogMeterCenter',-1.2,2.2);
 
     gauge1.draw();
 
