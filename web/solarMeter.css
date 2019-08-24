@@ -219,6 +219,11 @@ body{
     stroke-width: 2px;    
 }
 
+.analogMeterNeedleHistoricLastPeak {
+    stroke: red;
+    stroke-width: 2px;    
+}
+
 .analogMeterNeedle {
     stroke: black;
     stroke-width: 1px;    
