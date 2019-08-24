@@ -205,7 +205,7 @@ body{
 }
 
 .analogMeterNeedleHistoricAverage {
-    stroke: yellow;
+    stroke: darkorange;
     stroke-width: 2px;    
 }
 

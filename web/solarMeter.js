@@ -451,16 +451,22 @@ function setupLayout() {
     gauge1.addArc(lowerTickCenter,'analogMeterArc');
     gauge1.addNumberLabels(0.83,0,10,11,'analogMeterLabel');
 
-    var centerSize = 0.075;
+    var centerSize=0.075;
     gauge1.addArc(centerSize,'analogMeterCenter',-1.2,2.2);
 
-    needle = gauge1.addNeedle(lowerTickCenter+0.05,lowerTickCenter-0.05,'analogMeterNeedleHistoricPeak');
+    historyNeedleLength=0.05;
+    historyNeedleOutRadius=historyNeedleLength+(historyNeedleLength/2);
+    historyNeedleInRadius=historyNeedleLength-(historyNeedleLength/2);
+    needle = gauge1.addNeedle(historyNeedleOutRadius,historyNeedleInRadius,'analogMeterNeedleHistoricPeak');
     dashboardInfo["analogMeterNeedleHistoricPeak"]=needle;
 
-    needle = gauge1.addNeedle(lowerTickCenter+0.05,lowerTickCenter-0.05,'analogMeterNeedleHistoricAverage');
+    needle = gauge1.addNeedle(historyNeedleOutRadius,historyNeedleInRadius,'analogMeterNeedleHistoricAverage');
     dashboardInfo["analogMeterNeedleHistoricAverage"]=needle;
 
-    needle = gauge1.addNeedle(lowerTickCenter+0.05,lowerTickCenter-0.05,'analogMeterNeedleHistoricLast');
+    needle = gauge1.addNeedle(historyNeedleOutRadius,historyNeedleInRadius,'analogMeterNeedleHistoricLastPeak');
+    dashboardInfo["analogMeterNeedleHistoricLastPeak"]=needle;
+
+    needle = gauge1.addNeedle(historyNeedleOutRadius,historyNeedleInRadius,'analogMeterNeedleHistoricLast');
     dashboardInfo["analogMeterNeedleHistoricLast"]=needle;
 
     needlePeak = gauge1.addNeedle(1,centerSize,'analogMeterNeedlePeak');
@@ -619,18 +625,24 @@ function metricsUpdated(lastModified) {
 
     // set Analog history
     if (selectorValues[selectorSelected] == "currentPower") {
+        historicLastPeak=metricData['yesterday']['peakPower'];
         historicLast=metricData['yesterday']['currentPower'];
         historicPeak=metricData['30days']['maxPeakPower'];
         historicAverage=metricData['30days']['avgPeakPower'];
     } else if (selectorValues[selectorSelected] == "lastDayEnergy") {
+        historicLastPeak=metricData['yesterday']['maxEnergy'];
         historicLast=metricData['yesterday']['lastDayEnergy'];
         historicPeak=metricData['30days']['maxEnergy'];
         historicAverage=metricData['30days']['avgEnergy'];
     } else {
+        historicLastPeak=0;
         historicLast=0;
         historicPeak=0;
         historicAverage=0;
     }
+
+    needlePercent=historicLastPeak/(1000*selectorMax[selectorSelected]);
+    dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedleHistoricLastPeak"],needlePercent);
 
     needlePercent=historicLast/(1000*selectorMax[selectorSelected]);
     dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedleHistoricLast"],needlePercent);
