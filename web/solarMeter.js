@@ -445,18 +445,29 @@ function setupLayout() {
     gauge1.addTicks(0.95,101,0.025,'analogMeterTicks',"top");
     gauge1.addTicks(0.95,11,0.05,'analogMeterTicks',"top");
     gauge1.addArc(0.95,'analogMeterArc');
-    gauge1.addTicks(0.75,21,0.025,'analogMeterTicks',"center");
-    gauge1.addArc(0.75,'analogMeterArc');
+    
+    var lowerTickCenter=0.75;
+    gauge1.addTicks(lowerTickCenter,21,0.025,'analogMeterTicks',"center");
+    gauge1.addArc(lowerTickCenter,'analogMeterArc');
     gauge1.addNumberLabels(0.83,0,10,11,'analogMeterLabel');
 
     var centerSize = 0.075;
+    gauge1.addArc(centerSize,'analogMeterCenter',-1.2,2.2);
+
+    needle = gauge1.addNeedle(lowerTickCenter+0.05,lowerTickCenter-0.05,'analogMeterNeedleHistoricPeak');
+    dashboardInfo["analogMeterNeedleHistoricPeak"]=needle;
+
+    needle = gauge1.addNeedle(lowerTickCenter+0.05,lowerTickCenter-0.05,'analogMeterNeedleHistoricAverage');
+    dashboardInfo["analogMeterNeedleHistoricAverage"]=needle;
+
+    needle = gauge1.addNeedle(lowerTickCenter+0.05,lowerTickCenter-0.05,'analogMeterNeedleHistoricLast');
+    dashboardInfo["analogMeterNeedleHistoricLast"]=needle;
+
     needlePeak = gauge1.addNeedle(1,centerSize,'analogMeterNeedlePeak');
     dashboardInfo["analogMeterNeedlePeak"]=needlePeak;
 
     needle = gauge1.addNeedle(1,centerSize,'analogMeterNeedle');
     dashboardInfo["analogMeterNeedle"]=needle;
-
-    gauge1.addArc(centerSize,'analogMeterCenter',-1.2,2.2);
 
     gauge1.draw();
 
@@ -551,20 +562,23 @@ function format7SegmentHHMI(dateStr) {
 // lastModified is from the Last Updated header in the HTTP response
 function metricsUpdated(lastModified) {
 
+    // Set JSON tab
     var jsonString=JSON.stringify(metricData, Object.keys(metricData).sort(), 2);
     var jsonNew = jsonString.replace(/: /g, ":\n      ");
     dashboardInfo["jsonTextElement"].textContent=jsonNew;
     
-    dashboardInfo["textNowValue"].innerHTML=(Math.round(metricData["currentPower"])/1000).toFixed(3)+" kW";
-    dashboardInfo["textTodayValue"].innerHTML=(Math.round(metricData["lastDayEnergy"])/1000).toFixed(3)+" kWh";
-    dashboardInfo["textMonthValue"].innerHTML=(Math.round(metricData["lastMonthEnergy"])/1000).toFixed(3)+" kWh";
+    // Set TEXT tab
+    dashboardInfo["textNowValue"].innerHTML=(Math.round(metricData['now']["currentPower"])/1000).toFixed(3)+" kW";
+    dashboardInfo["textTodayValue"].innerHTML=(Math.round(metricData['now']["lastDayEnergy"])/1000).toFixed(3)+" kWh";
+    dashboardInfo["textMonthValue"].innerHTML=(Math.round(metricData['now']["lastMonthEnergy"])/1000).toFixed(3)+" kWh";
     
-    dashboardInfo["digitalValueFront"].innerHTML=format7Segment(metricData[selectorValues[selectorSelected]]/1000,selectorPrecision[selectorSelected],digitalDisplayDigits);
+    // Set Digital tab
+    dashboardInfo["digitalValueFront"].innerHTML=format7Segment(metricData['now'][selectorValues[selectorSelected]]/1000,selectorPrecision[selectorSelected],digitalDisplayDigits);
     dashboardInfo["digitalUnitFront"].innerHTML=selectorUnits[selectorSelected];
 
-    var updated=metricData["lastUpdateTime"];
-    var sunrise=metricData["sunrise"];
-    var sunset=metricData["sunset"];
+    var updated=metricData['now']["lastUpdateTime"];
+    var sunrise=metricData['now']["sunrise"];
+    var sunset=metricData['now']["sunset"];
     
     var updatedLabel="UPDATED:";
     var sunriseLabel="SUNRISE:";
@@ -593,16 +607,42 @@ function metricsUpdated(lastModified) {
         dashboardInfo["info3ValueFront"].innerHTML=format7SegmentHHMI(updated);
     } 
 
-    var needlePercent=metricData[selectorValues[selectorSelected]]/(1000*selectorMax[selectorSelected]);
+    // set Analog tab
+    var needlePercent=metricData['now'][selectorValues[selectorSelected]]/(1000*selectorMax[selectorSelected]);
     dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedle"],needlePercent);
 //     console.log(needlePercent);
 
     if (selectorValues[selectorSelected] == "currentPower") {
-        needlePercent=metricData["peakPower"]/(1000*selectorMax[selectorSelected]);
+        needlePercent=metricData['now']["peakPower"]/(1000*selectorMax[selectorSelected]);
     }
     dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedlePeak"],needlePercent);
 
+    // set Analog history
+    if (selectorValues[selectorSelected] == "currentPower") {
+        historicLast=metricData['yesterday']['currentPower'];
+        historicPeak=metricData['30days']['maxPeakPower'];
+        historicAverage=metricData['30days']['avgPeakPower'];
+    } else if (selectorValues[selectorSelected] == "lastDayEnergy") {
+        historicLast=metricData['yesterday']['lastDayEnergy'];
+        historicPeak=metricData['30days']['maxEnergy'];
+        historicAverage=metricData['30days']['avgEnergy'];
+    } else {
+        historicLast=0;
+        historicPeak=0;
+        historicAverage=0;
+    }
 
+    needlePercent=historicLast/(1000*selectorMax[selectorSelected]);
+    dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedleHistoricLast"],needlePercent);
+
+    needlePercent=historicPeak/(1000*selectorMax[selectorSelected]);
+    dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedleHistoricPeak"],needlePercent);
+
+    needlePercent=historicAverage/(1000*selectorMax[selectorSelected]);
+    dashboardInfo["analogMeterSvg"].setNeedle(dashboardInfo["analogMeterNeedleHistoricAverage"],needlePercent);
+
+
+    // set Analog units
     if (selectorMax[selectorSelected] == 10) {
         dashboardInfo["analogUnitFrontText"].innerHTML="kW";
         dashboardInfo["analogUnitFrontMulti"].innerHTML="!";
@@ -635,7 +675,7 @@ function loadMetricData() {
     loadJSON(metricDataURL,function(response,lastModified) {
         // Parse JSON string into object
         tempData = JSON.parse(response);
-        metricData = tempData['now'];
+        metricData = tempData;
         metricsUpdated(lastModified);
     }); 
 }
