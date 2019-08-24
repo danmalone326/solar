@@ -455,8 +455,8 @@ function setupLayout() {
     gauge1.addArc(centerSize,'analogMeterCenter',-1.2,2.2);
 
     historyNeedleLength=0.05;
-    historyNeedleOutRadius=historyNeedleLength+(historyNeedleLength/2);
-    historyNeedleInRadius=historyNeedleLength-(historyNeedleLength/2);
+    historyNeedleOutRadius=lowerTickCenter+(historyNeedleLength/2);
+    historyNeedleInRadius=lowerTickCenter-(historyNeedleLength/2);
     needle = gauge1.addNeedle(historyNeedleOutRadius,historyNeedleInRadius,'analogMeterNeedleHistoricPeak');
     dashboardInfo["analogMeterNeedleHistoricPeak"]=needle;
 
