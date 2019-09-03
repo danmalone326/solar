@@ -459,14 +459,14 @@ function setupLayout() {
     historyNeedleMidRadius=lowerTickCenter;
     historyNeedleInRadius=lowerTickCenter-(historyNeedleLength/2);
     
-    # Average and Peak are above the line
+// Average and Peak are above the line
     needle = gauge1.addNeedle(historyNeedleOutRadius,historyNeedleMidRadius,'analogMeterNeedleHistoricPeak');
     dashboardInfo["analogMeterNeedleHistoricPeak"]=needle;
 
     needle = gauge1.addNeedle(historyNeedleOutRadius,historyNeedleMidRadius,'analogMeterNeedleHistoricAverage');
     dashboardInfo["analogMeterNeedleHistoricAverage"]=needle;
 
-    # Previous and Previous Peak are below the line
+// Previous and Previous Peak are below the line
     needle = gauge1.addNeedle(historyNeedleMidRadius,historyNeedleInRadius,'analogMeterNeedleHistoricLastPeak');
     dashboardInfo["analogMeterNeedleHistoricLastPeak"]=needle;
 
