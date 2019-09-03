@@ -205,12 +205,12 @@ body{
 }
 
 .analogMeterNeedleHistoricAverage {
-    stroke: green;
+    stroke: darkorange;
     stroke-width: 2px;    
 }
 
 .analogMeterNeedleHistoricPeak {
-    stroke: darkorange;
+    stroke: green;
     stroke-width: 2px;    
 }
 
