@@ -243,8 +243,13 @@ def generateRestData(siteInfo):
     currentDateStr = currentTime.strftime(database.dateOnlyFormat)
     yesterdayDateStr = yesterdayStart.strftime(database.dateOnlyFormat)
 
-    restData['now']['peakPower'] = peaks[currentDateStr]['peakPower']
-
+    try:
+        restData['now']['peakPower'] = peaks[currentDateStr]['peakPower']
+    except (KeyError):
+        restData['now']['peakPower'] = 0
+    except:
+        raise
+    
     restData['yesterday']['peakPower'] = peaks[yesterdayDateStr]['peakPower']
     restData['yesterday']['maxEnergy'] = peaks[yesterdayDateStr]['energy']  
     
