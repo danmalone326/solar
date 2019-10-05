@@ -717,8 +717,48 @@ function resize() {
     },250);
 }
 
+var modeParamValue = ['analog','digital','text','json'];
+var dialParamValue = ['now','today','month','year'];
+// var selectedButtonNum = 0;
+// var selectorSelected = 0;
+// var metricDataURL="http://www.malone.org/~dmalone/dmaloneSolar.json";
+
+function parseParameters() {
+    var paramsString = window.location.href.match(/^[^\?]+(.*)$/)[1];
+    var params = new URLSearchParams(paramsString);
+
+    for (const [key, value] of params) {
+        if (key == 'dataURL') {
+            metricDataURL=decodeURIComponent(value);
+        }
+        if (key == 'mode') {
+            if (/^\d+$/.test(value)) {
+                modeValue = parseInt(value, 10);
+            } else {
+                modeValue = modeParamValue.indexOf(value);
+            }
+            if ((modeValue < 0) || (modeValue >= modeParamValue.length)) {
+                modeValue = 0;
+            }
+            selectedButtonNum = modeValue;
+        }
+        if (key == 'dial') {
+            if (/^\d+$/.test(value)) {
+                dialValue = parseInt(value, 10);
+            } else {
+                dialValue = dialParamValue.indexOf(value);
+            }
+            if ((dialValue < 0) || (dialValue >= dialParamValue.length)) {
+                dialValue = 0;
+            } 
+            selectorSelected = dialValue;
+        }
+    }
+}
+
 function onload(){
 //     console.log("onload");
+    parseParameters();
     setupLayout(); 
     bottomButtonSelect(selectedButtonNum);
     refresh();
