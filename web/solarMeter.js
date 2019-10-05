@@ -723,7 +723,7 @@ var dialParamValue = ['now','today','month','year'];
 // http://www.example.com/solar/solarMeter.html
 //      ?mode=digital
 //      &dial=today
-//      &data=http%3A%2F%2Fwww.example.com%2Fsolar.json
+//      &dataURL=http%3A%2F%2Fwww.example.com%2Fsolar.json
 
 function parseParameters() {
     var paramsString = window.location.href.match(/^[^\?]+(.*)$/)[1];
