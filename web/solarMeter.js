@@ -719,9 +719,11 @@ function resize() {
 
 var modeParamValue = ['analog','digital','text','json'];
 var dialParamValue = ['now','today','month','year'];
-// var selectedButtonNum = 0;
-// var selectorSelected = 0;
-// var metricDataURL="http://www.malone.org/~dmalone/dmaloneSolar.json";
+// example: 
+// http://www.example.com/solar/solarMeter.html
+//      ?mode=digital
+//      &dial=today
+//      &data=http%3A%2F%2Fwww.example.com%2Fsolar.json
 
 function parseParameters() {
     var paramsString = window.location.href.match(/^[^\?]+(.*)$/)[1];
