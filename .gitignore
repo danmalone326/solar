@@ -19,3 +19,9 @@ sampleData/
 
 # test script
 test
+
+# skyfield data files
+*.bsp
+
+# open vi files (swp)
+*.swp
