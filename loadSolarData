@@ -204,20 +204,52 @@ def updateSunData(siteInfo):
     return updated
 
 
+skyfieldTs=None
+skyfieldE=None
+skyfieldInitialized=False
+def initializeSkyfield():
+    global skyfieldTs
+    global skyfieldE
+    global skyfieldInitialized
+    if not skyfieldInitialized:
+        skyfieldInitialized=True
+        skyfieldTs = api.load.timescale(builtin=True)
+        skyfieldE = api.load('de421.bsp')
+
+
 def getBestSunData(siteInfo):
-    savedSunData=database.getSunData(siteInfo)
-    
-    nowDate = datetime.now().date()
-    nowDateStr=nowDate.strftime(database.dateOnlyFormat)
-    
-    if (nowDateStr in savedSunData):
-        result=savedSunData[nowDateStr]
-    elif (len(savedSunData) > 0):
-        maxSavedDateStr=max(savedSunData)
-        result=savedSunData[maxSavedDateStr]
-    else:
-        result={'sunrise':'1970-01-01 00:00:00', 'sunset':'1970-01-01 00:00:00', 'tzOffset':'0'}
-    
+    initializeSkyfield()
+    location = api.Topos(siteInfo['lat']+" N",siteInfo['lon']+" E")
+
+    today = arrow.now().floor('day')
+
+    utcStart = today.to('utc')
+    utcEnd = utcStart.shift(days=+1)
+    dateStart = skyfieldTs.utc(utcStart.year,
+                               utcStart.month,
+                               utcStart.day,
+                               utcStart.hour,
+                               utcStart.minute,
+                               utcStart.second)
+    dateEnd = skyfieldTs.utc(utcEnd.year,
+                             utcEnd.month,
+                             utcEnd.day,
+                             utcEnd.hour,
+                             utcEnd.minute,
+                             utcEnd.second)
+
+    time, rise = almanac.find_discrete(dateStart, dateEnd, almanac.sunrise_sunset(skyfieldE, location))
+
+    sunrise=arrow.get(time[0].utc_iso())
+    sunriseStr = sunrise.to('local').format('YYYY-MM-DD HH:mm:ss')
+
+    sunset=arrow.get(time[1].utc_iso())
+    sunsetStr = sunset.to('local').format('YYYY-MM-DD HH:mm:ss')
+
+    tzStr = sunrise.to('local').format('Z').replace('0','',3)
+
+    result={'sunrise': sunriseStr, 'sunset':sunsetStr, 'tzOffset':tzStr}
+
     return result
 
 def generateRestData(siteInfo):
