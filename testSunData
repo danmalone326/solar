@@ -188,20 +188,40 @@ def generateRestData(siteInfo):
     thisTimeYesterday = currentTime - timedelta(days=1)
     thisTimeYesterdayStr = thisTimeYesterday.strftime(database.datetimeFormat)
     restData['yesterday'] = database.getClosestOverview(siteInfo,thisTimeYesterdayStr)
+
+    if debug: 
+        print restData
     
     # Get peaks for today and yesterday
     yesterdayStart = thisTimeYesterday.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterdayStartStr = yesterdayStart.strftime(database.datetimeFormat)
     
     peaks = database.getDailyBetween(siteInfo,yesterdayStartStr,currentTimeStr)
+    if debug:
+        print peaks
     
     currentDateStr = currentTime.strftime(database.dateOnlyFormat)
     yesterdayDateStr = yesterdayStart.strftime(database.dateOnlyFormat)
 
-    restData['now']['peakPower'] = peaks[currentDateStr]['peakPower']
-
-    restData['yesterday']['peakPower'] = peaks[yesterdayDateStr]['peakPower']
-    restData['yesterday']['maxEnergy'] = peaks[yesterdayDateStr]['energy']  
+    try:
+        restData['now']['peakPower'] = peaks[currentDateStr]['peakPower']
+    except (KeyError):
+        if debug:
+            print "KeyError1"
+        restData['now']['peakPower'] = 0
+    except:
+        raise
+    
+    try:
+        restData['yesterday']['peakPower'] = peaks[yesterdayDateStr]['peakPower']
+        restData['yesterday']['maxEnergy'] = peaks[yesterdayDateStr]['energy']  
+    except (KeyError):
+        if debug:
+            print "KeyError2"
+        restData['yesterday']['peakPower'] = 0
+        restData['yesterday']['maxEnergy'] = 0 
+    except:
+        raise
     
     # Get 30 day averages for peak power and energy
     # and daily details
