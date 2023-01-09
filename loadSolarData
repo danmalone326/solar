@@ -1,10 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import database
 import json
 from datetime import datetime, timedelta
 import time
-import urllib,urllib2
+import urllib
+from urllib.request import urlopen
+from urllib.error import HTTPError 
 
 debug = False
 
@@ -18,12 +20,12 @@ milDateTimeFormat="%m/%d/%Y %H:%M"
 def getCurrentOverview(siteInfo):
     restURL = 'https://monitoringapi.solaredge.com/site/'+siteInfo['id']+'/overview?api_key='+siteInfo['apiKey']
     try:
-        restResponse = urllib2.urlopen(restURL)
-    except urllib2.HTTPError as e:
+        restResponse = urlopen(restURL)
+    except HTTPError as e:
         # This means something went wrong.
         raise Exception('getCurrentData: {}'.format(e.code))
         
-    overview = json.loads(restResponse.read().encode("utf-8"))
+    overview = json.loads(restResponse.read().decode("utf-8"))
     
 #     with open('overview.json', 'r') as file:
 #         overview = json.load(file)
@@ -55,20 +57,24 @@ def updateOverview(siteInfo):
         ((now > sunriseDT) and (now < sunsetDT))): # Sun is up
 
         if debug:
-            print "Updating"
+            print("Updating")
         
         currentData = getCurrentOverview(siteInfo)
         updated = True
 
+        currentData['lastUpdateTime'] = currentData['lastUpdateTime'].decode("utf-8")
+
         if debug:
-            print "current:"
-            print currentData
+            print("current:")
+            print(currentData)
+            print("last:")
+            print(lastOverview)
     
         if (currentData['lastUpdateTime'] > lastOverview['lastUpdateTime']):
             database.insertOverview(siteInfo,currentData)
         else:
             if debug:
-                print "no update"
+                print("no update")
     
     return updated
 
